@@ -917,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnShareTelegram) {
     btnShareTelegram.addEventListener('click', () => {
       const url = encodeURIComponent(getAppShareUrl());
-      const text = encodeURIComponent('Gia Sư Ngoại Ngữ Free — Luyện nói Tiếng Anh & Tiếng Trung 1-kèm-1 cùng AI miễn phí!');
+      const text = encodeURIComponent('Gia Sư Ngoại Ngữ Free — Luyện nói Tiếng Anh & Tiếng Trung cùng AI miễn phí!');
       window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank', 'noopener,noreferrer');
     });
   }
@@ -934,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         await navigator.share({
           title: 'Gia Sư Ngoại Ngữ Free',
-          text: 'Luyện nói Tiếng Anh & Tiếng Trung 1-kèm-1 cùng AI miễn phí, không cần cài đặt!',
+          text: 'Luyện nói Tiếng Anh & Tiếng Trung cùng AI miễn phí, không cần cài đặt!',
           url: getAppShareUrl()
         });
       } catch (e) {
