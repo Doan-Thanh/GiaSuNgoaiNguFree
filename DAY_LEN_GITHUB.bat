@@ -5,7 +5,7 @@ color 0a
 cd /d "%~dp0"
 
 echo ======================================================================
-echo    DANG DAY CODE LEN GITHUB: Doan-Thanh / -GiaSuNgoaiNguFree-
+echo    DANG DAY CODE LEN GITHUB: Doan-Thanh / GiaSuNgoaiNguFree
 echo ======================================================================
 echo.
 
