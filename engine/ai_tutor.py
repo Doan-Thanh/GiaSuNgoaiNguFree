@@ -390,7 +390,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "一切正常，正想找个人聊聊天呢 (Yíqiè zhèngcháng, zhèng xiǎng zhǎo gèrén liáoliao tiān ne - Mọi thứ đều bình thường, tôi đang muốn tìm người tán gẫu đây)"
                 ]
             }
-        elif any(k in t for k in ["咖啡", "kāfēi", "cafe", "cà phê"]):
+        elif any(k in t for k in ["cà phê", "quán xá", "咖啡", "kāfēi", "cafe", "coffee"]):
             return {
                 "reply_hanzi": "聊到喝咖啡，我每天早上都得来一杯提提神！你平时喜欢喝美式还是拿铁？有常去的咖啡馆吗？",
                 "reply_pinyin": "Liáo dào hē kāfēi, wǒ měitiān zǎoshang dōu děi lái yì bēi títi shén! Nǐ píngshí xǐhuan hē měishì háishì nátiě? Yǒu cháng qù de kāfēiguǎn ma?",
@@ -402,7 +402,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "我平时不太喝咖啡，更喜欢喝奶茶或水果茶 (Wǒ píngshí bú tài hē kāfēi, gèng xǐhuan hē nǎichá huò shuǐguǒchá - Bình thường tôi ít uống cà phê, thích trà sữa hoặc trà hoa quả hơn)"
                 ]
             }
-        elif any(k in t for k in ["美食", "菜", "饭", "ăn", "ẩm thực", "food"]):
+        elif any(k in t for k in ["ẩm thực", "món ngon", "nấu nướng", "ăn", "美食", "菜", "饭", "food", "cooking"]):
             return {
                 "reply_hanzi": "聊到好吃的我可就不困了！你最喜欢哪一种菜系？有没有什么百吃不厌的家常菜？",
                 "reply_pinyin": "Liáo dào hǎochī de wǒ kě jiù bú kùn le! Nǐ zuì xǐhuan nǎ yì zhǒng càixì? Yǒu méiyǒu shénme bǎi chī bú yàn de jiāchángcài?",
@@ -414,7 +414,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "我平时喜欢自己在家做饭，既健康又省钱 (Wǒ píngshí xǐhuan zìjǐ zài jiā zuòfàn, jì jiànkāng yòu shěngqián - Tôi hay tự nấu ăn ở nhà, vừa sạch lại tiết kiệm)"
                 ]
             }
-        elif any(k in t for k in ["旅游", "度假", "du lịch", "travel"]):
+        elif any(k in t for k in ["du lịch", "khám phá", "nghỉ dưỡng", "旅游", "度假", "travel", "trip"]):
             return {
                 "reply_hanzi": "旅行总能让人心情变好！你至今去过最难忘的地方是哪里？接下来最想去哪儿玩？",
                 "reply_pinyin": "Lǚxíng zǒng néng ràng rén xīanqíng biàn hǎo! Nǐ zhìjīn qù guo zuì nánwàng de dìfang shì nǎlǐ? Jiēxiàlai zuì xiǎng qù nǎr wán?",
@@ -424,6 +424,54 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "我最难忘的是去北京看长城和故宫，非常震撼 (Wǒ zuì nánwàng de shì qù Běijīng kàn Chángchéng hé Gùgōng, fēicháng zhènhàn - Đáng nhớ nhất là lần đi Bắc Kinh ngắm Vạn Lý Trường Thành và Cố Cung)",
                     "我更喜欢去海边度假，吹吹海风晒晒太阳 (Wǒ gèng xǐhuan qù hǎibiān dùjià, chuīchui hǎifēng shàishai tàiyáng - Tôi thích đi biển nghỉ dưỡng, hóng gió và tắm nắng hơn)",
                     "我打算今年休年假的时候出国走走 (Wǒ dǎsuàn jīnnián xiū niánjià de shíhou chūguó zǒuzou - Tôi tính dịp nghỉ phép năm nay sẽ đi du lịch nước ngoài một chuyến)"
+                ]
+            }
+        elif any(k in t for k in ["công việc", "sự nghiệp", "đi làm", "职场", "工作", "上班", "work", "career"]):
+            return {
+                "reply_hanzi": "工作忙碌之余也别忘了放松身心。你平时的工作节奏快吗？工作中最有成就感的事情是什么？",
+                "reply_pinyin": "Gōngzuò mánglù zhī yú yě bié wàng le fàngsōng shēnxīn. Nǐ píngshí de gōngzuò jiézòu kuài ma? Gōngzuò zhōng zuì yǒu chéngjiùgǎn de shìqing shì shénme?",
+                "translation_vi": "Bận rộn làm việc nhưng cũng đừng quên thư giãn nhé. Nhịp độ công việc của bạn có dồn dập không? Điều gì trong công việc làm bạn thấy có thành tựu nhất?",
+                "feedback": "Chia sẻ về công việc giúp mở rộng nhiều từ vựng văn phòng hữu ích.",
+                "suggested_replies": [
+                    "我平时工作挺忙的，不过同事们都特别好相处 (Wǒ píngshí gōngzuò tǐng máng de, búguò tóngshìmen dōu tèbié hǎo xiāngchǔ - Công việc khá bận rộn, nhưng đồng nghiệp rất dễ gần)",
+                    "我觉得完成一个大项目时的成就感最高 (Wǒ juéde wánchéng yí gè dà xiàngmù shí de chéngjiùgǎn zuì gāo - Tôi thấy lúc hoàn thành một dự án lớn là thỏa mãn nhất)",
+                    "我目前正在努力平衡工作与个人生活 (Wǒ mùqián zhèngzài nǔlì pínghéng gōngzuò yǔ gèrén shēnghuó - Hiện tôi đang cố gắng cân bằng giữa công việc và đời sống riêng)"
+                ]
+            }
+        elif any(k in t for k in ["phim", "giải trí", "rạp chiếu", "电影", "追剧", "movie", "cinema", "netflix"]):
+            return {
+                "reply_hanzi": "看电影追剧真是最棒的消遣了！你最近在追什么好看的电视剧或电影吗？",
+                "reply_pinyin": "Kàn diànyǐng zhuījù zhēn shì zuì bàng de xiāoqiǎn le! Nǐ zuìjìn zài zhuī shénme hǎokàn de diànshìjù huò diànyǐng ma?",
+                "translation_vi": "Xem phim đúng là cách giải trí tuyệt vời nhất! Dạo này bạn có đang cày bộ phim hay bộ truyền hình nào không?",
+                "feedback": "Kể tên các thể loại phim bạn thích như hành động, hài hước hay tình cảm.",
+                "suggested_replies": [
+                    "我特别喜欢科幻片和悬疑悬念电影 (Wǒ tèbié xǐhuan kēhuànpiàn hé xuányí diànyǐng - Tôi cực kỳ thích phim khoa học viễn tưởng và trinh thám ly kỳ)",
+                    "我最近在看一部轻松搞笑的情景喜剧 (Wǒ zuìjìn zài kàn yí bù qīngsōng gǎoxiào de qíngjǐng xǐjù - Dạo này tôi đang xem một bộ phim sitcom hài hước nhẹ nhàng)",
+                    "周末我打算约朋友一起去电影院看新上映的大片 (Zhōumò wǒ dǎsuàn yuē péngyou yìqǐ qù diànyǐngyuàn kàn xīn shàngyìng de dàpiàn - Cuối tuần tôi tính hẹn bạn ra rạp xem phim bom tấn mới chiếu)"
+                ]
+            }
+        elif any(k in t for k in ["thời tiết", "đời sống", "mưa", "nắng", "天气", "四季", "weather"]):
+            return {
+                "reply_hanzi": "你那边的天气今天怎么样？是晴天还是下雨？你最喜欢哪一个季节？",
+                "reply_pinyin": "Nǐ nàbiān de tiānqì jīntiān zěnmeyàng? Shì qíngtiān háishì xiàyǔ? Nǐ zuì xǐhuan nǎ yí gè jìjié?",
+                "translation_vi": "Thời tiết bên bạn hôm nay thế nào? Trời nắng hay mưa? Bạn thích mùa nào nhất trong năm?",
+                "feedback": "Thời tiết là câu mở đầu kinh điển trong mọi cuộc trò chuyện thường nhật.",
+                "suggested_replies": [
+                    "今天天气很好，阳光明媚，温度很舒适 (Jīntiān tiānqì hěn hǎo, yángguāng míngmèi, wēndù hěn shūshì - Hôm nay thời tiết rất đẹp, nắng ấm và nhiệt độ dễ chịu)",
+                    "我最喜欢秋天，天气凉爽，不冷也不热 (Wǒ zuì xǐhuan qiūtiān, tiānqì liángshuǎng, bù lěng yě bú rè - Tôi thích nhất mùa thu, trời mát mẻ không quá lạnh cũng không quá nóng)",
+                    "这几天一直在下雨，出门有点不太方便 (Zhè jǐ tiān yìzhí zài xiàyǔ, chūmén yǒudiǎn bú tài fāngbiàn - Mấy hôm nay mưa suốt, ra đường hơi bất tiện một chút)"
+                ]
+            }
+        elif any(k in t for k in ["cuối tuần", "xả stress", "kế hoạch", "周末", "weekend"]):
+            return {
+                "reply_hanzi": "又快到周末啦！这个周末你有什么特别的计划吗？打算在家宅着还是出去逛逛？",
+                "reply_pinyin": "Yòu kuài dào zhōumò la! Zhège zhōumò nǐ yǒu shénme tèbié de jìhuà ma? Dǎsuàn zài jiā zháizhe háishì chūqù guàngguang?",
+                "translation_vi": "Lại sắp đến cuối tuần rồi! Cuối tuần này bạn có kế hoạch đặc biệt gì không? Định ở nhà nghỉ ngơi hay ra ngoài dạo chơi?",
+                "feedback": "Chia sẻ về kế hoạch cuối tuần luôn tạo cảm giác háo hức và tích cực.",
+                "suggested_replies": [
+                    "我打算好好睡个懒觉，然后在家里看书追剧 (Wǒ dǎsuàn hǎohǎo shuì gè lǎnjiào, ránhòu zài jiā lǐ kànshū zhuījù - Tôi tính ngủ nướng một giấc đã, rồi ở nhà đọc sách cày phim)",
+                    "我和朋友约好了一起去郊外野餐露营 (Wǒ hé péngyou yuē hǎo le yìqǐ qù jiāowài yěcān lùyíng - Tôi hẹn bạn bè đi dã ngoại cắm trại ở ngoại ô)",
+                    "目前还没什么安排，到时候随心而行吧 (Mùqián hái méi shénme ānpái, dào shíhou suíxīn ér xíng ba - Giờ chưa có lịch gì cụ thể, tới lúc đó thích gì làm nấy)"
                 ]
             }
         else:
@@ -452,7 +500,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "Not bad! I'm ready to practice speaking with you. (/nɑːt bæd! aɪm ˈredi tuː ˈpræktɪs ˈspiːkɪŋ wɪð juː/ - Không tệ! Tôi đã sẵn sàng luyện nói cùng bạn rồi.)"
                 ]
             }
-        elif any(k in t for k in ["cafe", "cà phê", "coffee"]):
+        elif any(k in t for k in ["cà phê", "quán xá", "cafe", "coffee"]):
             return {
                 "reply": "I'm always down for good coffee! What's your go-to café drink or favorite spot to hang out?",
                 "reply_ipa": "/aɪm ˈɔːlweɪz daʊn fər ɡʊd ˈkɔːfi! wʌts jʊər ˈɡoʊ tuː kæˈfeɪ drɪŋk ɔːr ˈfeɪvərɪt spɑːt tuː hæŋ aʊt?/",
@@ -464,7 +512,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "I'm actually more of a tea person, especially matcha! (/aɪm ˈæktʃuəli mɔːr əv ə tiː ˈpɜːrsən, əˈspeʃəli ˈmætʃə/ - Thực ra tôi là người thích uống trà hơn, đặc biệt là matcha!)"
                 ]
             }
-        elif any(k in t for k in ["food", "cooking", "ăn", "ẩm thực"]):
+        elif any(k in t for k in ["ẩm thực", "món ngon", "nấu nướng", "ăn", "food", "cooking"]):
             return {
                 "reply": "Talking about delicious food always gets me excited! What is your absolute favorite comfort food?",
                 "reply_ipa": "/ˈtɔːkɪŋ əˈbaʊt dɪˈlɪʃəs fuːd ˈɔːlweɪz ɡets miː ɪkˈsaɪtɪd! wʌt ɪz jʊər ˈæbsəluːt ˈfeɪvərɪt ˈkʌmfərt fuːd?/",
@@ -476,7 +524,7 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "I really enjoy cooking simple homemade meals every evening. (/aɪ ˈriːəli ɪnˈdʒɔɪ ˈkʊkɪŋ ˈsɪmpəl ˈhoʊmmeɪd miːlz ˈevri ˈiːvnɪŋ/ - Tôi rất thích tự nấu những bữa cơm nhà giản dị mỗi tối.)"
                 ]
             }
-        elif any(k in t for k in ["travel", "du lịch", "vacation"]):
+        elif any(k in t for k in ["du lịch", "khám phá", "nghỉ dưỡng", "travel", "vacation", "trip"]):
             return {
                 "reply": "Traveling is such an incredible way to explore the world! What was the most unforgettable trip you've ever had?",
                 "reply_ipa": "/ˈtrævəlɪŋ ɪz sʌtʃ ən ɪnˈkredəbəl weɪ tuː ɪkˈsplɔːr ðə wɜːrld! wʌt wʌz ðə moʊst ˌʌnfərˈɡetəbəl trɪp juːv ˈevər hæd?/",
@@ -486,6 +534,54 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
                     "My trip to the coastal beaches was totally breathtaking. (/maɪ trɪp tuː ðə ˈkoʊstl ˈbiːtʃɪz wʌz ˈtoʊtəli ˈbreθteɪkɪŋ/ - Chuyến đi tới các bãi biển của tôi đẹp đến ngỡ ngàng.)",
                     "I love exploring vibrant city nightlife and local street food. (/aɪ lʌv ɪkˈsplɔːrɪŋ ˈvaɪbrənt ˈsɪti ˈnaɪtlaɪf ænd ˈloʊkl striːt fuːd/ - Tôi thích khám phá cuộc sống về đêm sôi động và ẩm thực đường phố.)",
                     "I'm planning an exciting road trip with friends this summer. (/aɪm ˈplænɪŋ ən ɪkˈsaɪtɪŋ roʊd trɪp wɪð frendz ðɪs ˈsʌmər/ - Tôi đang lên kế hoạch cho một chuyến phượt cùng bạn bè vào mùa hè này.)"
+                ]
+            }
+        elif any(k in t for k in ["công việc", "sự nghiệp", "đi làm", "work", "career"]):
+            return {
+                "reply": "Balancing work and personal life is always a journey! How has your workday been treating you lately?",
+                "reply_ipa": "/ˈbælənsɪŋ wɜːrk ænd ˈpɜːrsənl laɪf ɪz ˈɔːlweɪz ə ˈdʒɜːrni! haʊ hæz jʊər ˈwɜːrkdeɪ biːn ˈtriːtɪŋ juː ˈleɪtli?/",
+                "translation_vi": "Cân bằng công việc và cuộc sống luôn là một hành trình! Công việc dạo này của bạn diễn ra thế nào?",
+                "feedback": "Work topics let you practice professional and daily conversational phrases.",
+                "suggested_replies": [
+                    "Work has been quite productive, and my teammates are great. (/wɜːrk hæz biːn kwaɪt prəˈdʌktɪv, ænd maɪ ˈtiːmmeɪts ɑːr ɡreɪt/ - Công việc khá hiệu quả và đồng nghiệp của tôi rất tuyệt.)",
+                    "Things are a bit hectic right now with upcoming deadlines. (/θɪŋz ɑːr ə bɪt ˈhektɪk raɪt naʊ wɪð ˈʌpˌkʌmɪŋ ˈdedlaɪnz/ - Mọi thứ đang hơi bận rộn một chút vì hạn chót sắp đến.)",
+                    "I'm learning a lot of new skills at my current job. (/aɪm ˈlɜːrnɪŋ ə lɑːt əv nuː skɪlz æt maɪ ˈkɜːrənt dʒɑːb/ - Tôi đang học hỏi được rất nhiều kỹ năng mới ở công việc hiện tại.)"
+                ]
+            }
+        elif any(k in t for k in ["phim", "giải trí", "rạp chiếu", "movie", "cinema", "netflix"]):
+            return {
+                "reply": "Watching movies is such a fantastic way to unwind! Have you seen any great films or series recently?",
+                "reply_ipa": "/ˈwɑːtʃɪŋ ˈmuːviz ɪz sʌtʃ ə fænˈtæstɪk weɪ tuː ʌnˈwaɪnd! hæv juː siːn ˈɛni ɡreɪt fɪlmz ɔːr ˈsɪriːz ˈriːsntli?/",
+                "translation_vi": "Xem phim đúng là cách xả stress tuyệt vời nhất! Gần đây bạn có xem bộ phim hay series nào tâm đắc không?",
+                "feedback": "Talk about genres you enjoy, like sci-fi, comedy, or thrillers.",
+                "suggested_replies": [
+                    "I recently watched an amazing sci-fi movie with stunning visuals. (/aɪ ˈriːsntli wɑːtʃt ən əˈmeɪzɪŋ ˈsaɪfaɪ ˈmuːvi wɪð ˈstʌnɪŋ ˈvɪʒuəlz/ - Gần đây tôi vừa xem một phim khoa học viễn tưởng kỹ xảo tuyệt đẹp.)",
+                    "I'm binge-watching a hilarious comedy series on Netflix. (/aɪm bɪndʒ ˈwɑːtʃɪŋ ə hɪˈlæriəs ˈkɑːmədi ˈsɪriːz ɑːn ˈnetflɪks/ - Tôi đang cày một bộ phim hài kịch cực vui trên Netflix.)",
+                    "I prefer psychological thrillers that keep me guessing until the end. (/aɪ prɪˈfɜːr ˌsaɪkəˈlɑːdʒɪkl ˈθrɪlərz ðæt kiːp miː ˈɡesɪŋ ʌnˈtɪl ðiː end/ - Tôi thích phim giật gân tâm lý khiến người xem phải đoán đến phút cuối.)"
+                ]
+            }
+        elif any(k in t for k in ["thời tiết", "đời sống", "mưa", "nắng", "weather"]):
+            return {
+                "reply": "How's the weather over there today? Do you prefer sunny clear skies or cool rainy days?",
+                "reply_ipa": "/haʊz ðə ˈweðər ˈoʊvər ðɛr təˈdeɪ? duː juː prɪˈfɜːr ˈsʌni klɪr skaɪz ɔːr kuːl ˈreɪni deɪz?/",
+                "translation_vi": "Thời tiết bên bạn hôm nay thế nào? Bạn thích trời nắng quang đãng hay những ngày mưa mát mẻ hơn?",
+                "feedback": "Talking about the weather is an easy, friendly ice-breaker.",
+                "suggested_replies": [
+                    "It's sunny and pleasantly breezy today. (/ɪts ˈsʌni ænd ˈplezntli ˈbriːzi təˈdeɪ/ - Hôm nay trời nắng ráo và gió hiu hiu rất dễ chịu.)",
+                    "I love cool autumn days when the air feels crisp. (/aɪ lʌv kuːl ˈɔːtəm deɪz wen ðiː ɛr fiːlz krɪsp/ - Tôi mê những ngày thu mát mẻ không khí trong lành.)",
+                    "It's raining pretty heavily here, perfect for staying indoors. (/ɪts ˈreɪnɪŋ ˈprɪti ˈhevɪli hɪr, ˈpɜːrfɪkt fər ˈsteɪɪŋ ˌɪnˈdɔːrz/ - Chỗ tôi đang mưa khá to, rất hợp để ngồi trong nhà.)"
+                ]
+            }
+        elif any(k in t for k in ["cuối tuần", "kế hoạch", "xả stress", "weekend"]):
+            return {
+                "reply": "The weekend is always something to look forward to! Do you have any fun plans coming up?",
+                "reply_ipa": "/ðə ˈwiːkend ɪz ˈɔːlweɪz ˈsʌmθɪŋ tuː lʊk ˈfɔːrwərd tuː! duː juː hæv ˈɛni fʌn plænz ˈkʌmɪŋ ʌp?/",
+                "translation_vi": "Cuối tuần lúc nào cũng là điều đáng mong đợi! Bạn có kế hoạch vui chơi gì sắp tới chưa?",
+                "feedback": "Weekend plans are great for practicing future tenses and leisure activities.",
+                "suggested_replies": [
+                    "I'm planning to catch up on sleep and relax at home. (/aɪm ˈplænɪŋ tuː kætʃ ʌp ɑːn sliːp ænd rɪˈlæks æt hoʊm/ - Tôi định ngủ bù một bữa đã rồi thong thả nghỉ ngơi ở nhà.)",
+                    "I'm meeting up with some close friends for dinner and drinks. (/aɪm ˈmiːtɪŋ ʌp wɪð sʌm kloʊs frendz fər ˈdɪnər ænd drɪŋks/ - Tôi sẽ tụ tập bạn thân đi ăn tối và cà phê.)",
+                    "No set plans yet, just taking things as they come! (/noʊ set plænz jet, dʒʌst ˈteɪkɪŋ θɪŋz æz ðeɪ kʌm/ - Chưa có lịch gì cố định, cứ để mọi thứ tự nhiên thôi!)"
                 ]
             }
         else:

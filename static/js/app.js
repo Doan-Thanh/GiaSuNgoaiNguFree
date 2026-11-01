@@ -339,38 +339,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   const TOPIC_PRESETS = {
     en: [
-      { id: "free", icon: "💬", title: "Casual Daily Talk", sub: "Trò chuyện tự do mọi điều (Mặc định)", isDefault: true },
-      { id: "cafe", icon: "☕", title: "Café & Hanging Out", sub: "Quán cà phê, đồ uống, tán gẫu" },
-      { id: "food", icon: "🍕", title: "Food & Cooking", sub: "Món ăn ngon, ẩm thực, nấu nướng" },
-      { id: "travel", icon: "✈️", title: "Travel & Vacations", sub: "Du lịch, khám phá, đi biển" },
-      { id: "work", icon: "💼", title: "Work & Career", sub: "Công việc, đồng nghiệp, văn phòng" },
-      { id: "movies", icon: "🎬", title: "Movies & Netflix", sub: "Phim ảnh, rạp chiếu, diễn viên" },
-      { id: "music", icon: "🎵", title: "Music & Songs", sub: "Âm nhạc, ca sĩ, ban nhạc yêu thích" },
-      { id: "weather", icon: "🌧️", title: "Weather & Daily Life", sub: "Thời tiết, tâm trạng, nhịp sống" },
-      { id: "shopping", icon: "🛍️", title: "Shopping & Fashion", sub: "Mua sắm, quần áo, thời trang" },
-      { id: "fitness", icon: "🏋️", title: "Fitness & Health", sub: "Tập gym, thể thao, sức khỏe" },
-      { id: "pets", icon: "🐾", title: "Pets & Animals", sub: "Chó mèo, thú cưng, chăm sóc" },
-      { id: "money", icon: "💰", title: "Money & Spending", sub: "Tiền bạc, chi tiêu, tiết kiệm" },
-      { id: "books", icon: "📚", title: "Books & Self-Growth", sub: "Đọc sách, học tập, phát triển" },
-      { id: "commute", icon: "🚗", title: "Traffic & Commute", sub: "Xe cộ, đường phố, đi lại" },
-      { id: "weekend", icon: "🏖️", title: "Weekend Plans", sub: "Kế hoạch cuối tuần, xả stress" }
+      { id: "free", icon: "💬", title: "Trò Chuyện Tự Do", sub: "Casual Daily Talk (Mặc định)", isDefault: true },
+      { id: "cafe", icon: "☕", title: "Cà Phê & Quán Xá", sub: "Café, drinks & coffee shops" },
+      { id: "food", icon: "🍜", title: "Ẩm Thực & Món Ngon", sub: "Food, dishes & cooking" },
+      { id: "travel", icon: "✈️", title: "Du Lịch & Khám Phá", sub: "Travel, trips & vacations" },
+      { id: "work", icon: "💼", title: "Công Việc & Sự Nghiệp", sub: "Workplace & career talk" },
+      { id: "movies", icon: "🎬", title: "Phim Ảnh & Giải Trí", sub: "Movies, Netflix & cinema" },
+      { id: "music", icon: "🎵", title: "Âm Nhạc & Sở Thích", sub: "Favorite music & songs" },
+      { id: "weather", icon: "☀️", title: "Thời Tiết & Đời Sống", sub: "Daily weather & life vibes" },
+      { id: "shopping", icon: "🛍️", title: "Mua Sắm & Thời Trang", sub: "Shopping & clothing styles" },
+      { id: "fitness", icon: "🏋️", title: "Thể Thao & Sức Khỏe", sub: "Fitness, gym & workouts" },
+      { id: "pets", icon: "🐾", title: "Thú Cưng & Động Vật", sub: "Dogs, cats & lovely pets" },
+      { id: "money", icon: "💰", title: "Tiền Bạc & Chi Tiêu", sub: "Money, spending & saving" },
+      { id: "books", icon: "📚", title: "Đọc Sách & Học Tập", sub: "Books, reading & self-growth" },
+      { id: "commute", icon: "🚗", title: "Giao Thông & Đi Lại", sub: "Traffic, commute & streets" },
+      { id: "weekend", icon: "🏖️", title: "Kế Hoạch Cuối Tuần", sub: "Weekend relaxation plans" }
     ],
     zh: [
-      { id: "free", icon: "💬", title: "随心日常闲聊", sub: "Trò chuyện tự do mọi điều (Mặc định)", isDefault: true },
-      { id: "cafe", icon: "☕", title: "喝咖啡与探店", sub: "Quán cà phê, hẹn hò, đồ uống" },
-      { id: "food", icon: "🍕", title: "美食与烹饪", sub: "Ẩm thực Trung - Việt, nấu nướng" },
-      { id: "travel", icon: "✈️", title: "旅游与度假", sub: "Du lịch ngắm cảnh, đi chơi xa" },
-      { id: "work", icon: "💼", title: "职场与工作", sub: "Đi làm, đồng nghiệp, văn phòng" },
-      { id: "movies", icon: "🎬", title: "电影与追剧", sub: "Phim ảnh, xem rạp, thần tượng" },
-      { id: "music", icon: "🎵", title: "音乐与爱好", sub: "Âm nhạc, sở thích nghe nhạc" },
-      { id: "weather", icon: "🌧️", title: "天气与生活", sub: "Thời tiết, tâm trạng, khí hậu" },
-      { id: "shopping", icon: "🛍️", title: "逛街与网购", sub: "Mua sắm, săn sale Taobao, thời trang" },
-      { id: "fitness", icon: "🏋️", title: "健身与运动", sub: "Tập gym, chạy bộ, giữ dáng" },
-      { id: "pets", icon: "🐾", title: "萌宠与动物", sub: "Nuôi mèo chó, thú cưng đáng yêu" },
-      { id: "money", icon: "💰", title: "消费与理财", sub: "Chi tiêu, tiền bạc, tiết kiệm" },
-      { id: "books", icon: "📚", title: "学习与阅读", sub: "Đọc sách, học tiếng Trung, tiến bộ" },
-      { id: "commute", icon: "🚗", title: "交通与出行", sub: "Tàu điện ngầm, xe cộ, đi lại" },
-      { id: "weekend", icon: "🏖️", title: "周末去哪儿", sub: "Kế hoạch cuối tuần, xả hơi" }
+      { id: "free", icon: "💬", title: "Trò Chuyện Tự Do", sub: "随心日常闲聊 (Mặc định)", isDefault: true },
+      { id: "cafe", icon: "☕", title: "Cà Phê & Quán Xá", sub: "喝咖啡与探店 (Hē kāfēi)" },
+      { id: "food", icon: "🍜", title: "Ẩm Thực & Món Ngon", sub: "中华美食与家常菜 (Měishí)" },
+      { id: "travel", icon: "✈️", title: "Du Lịch & Khám Phá", sub: "旅游与度假 (Lǚyóu dùjià)" },
+      { id: "work", icon: "💼", title: "Công Việc & Sự Nghiệp", sub: "职场与上班 (Zhíchǎng)" },
+      { id: "movies", icon: "🎬", title: "Phim Ảnh & Giải Trí", sub: "电影与追剧 (Diànyǐng)" },
+      { id: "music", icon: "🎵", title: "Âm Nhạc & Sở Thích", sub: "流行音乐与爱好 (Yīnyuè)" },
+      { id: "weather", icon: "☀️", title: "Thời Tiết & Đời Sống", sub: "天气与四季日常 (Tiānqì)" },
+      { id: "shopping", icon: "🛍️", title: "Mua Sắm & Thời Trang", sub: "逛街与淘宝网购 (Guàngjiē)" },
+      { id: "fitness", icon: "🏋️", title: "Thể Thao & Sức Khỏe", sub: "健身与日常运动 (Jiànshēn)" },
+      { id: "pets", icon: "🐾", title: "Thú Cưng & Động Vật", sub: "养猫养狗萌宠 (Měngchǒng)" },
+      { id: "money", icon: "💰", title: "Tiền Bạc & Chi Tiêu", sub: "消费理财与省钱 (Xiāofèi)" },
+      { id: "books", icon: "📚", title: "Đọc Sách & Học Tập", sub: "阅读与学中文 (Yuèdú)" },
+      { id: "commute", icon: "🚗", title: "Giao Thông & Đi Lại", sub: "地铁与出行交通 (Jiāotōng)" },
+      { id: "weekend", icon: "🏖️", title: "Kế Hoạch Cuối Tuần", sub: "周末去哪儿玩 (Zhōumò)" }
     ]
   };
 
@@ -390,14 +390,14 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.innerHTML = `
       <div class="topic-hub-container" id="topic-hub">
         <div class="topic-hub-header">
-          <div class="topic-hub-badge">🎯 ${isZh ? '选择口语交流主题' : 'TỪ KHÓA CHỦ ĐỀ ĐÀM THOẠI'}</div>
-          <h2 class="topic-hub-title">${isZh ? '今天你想聊什么话题？' : 'Hôm nay bạn muốn luyện nói về chủ đề gì?'}</h2>
-          <p class="topic-hub-subtitle">${isZh ? '选择下方生活主题关键词，或直接输入你想聊的任意话题：' : 'Chọn một từ khóa gợi ý bên dưới hoặc tự nhập chủ đề bạn thích để bắt đầu nhé:'}</p>
+          <div class="topic-hub-badge">🎯 TỪ KHÓA CHỦ ĐỀ ĐÀM THOẠI</div>
+          <h2 class="topic-hub-title">Hôm nay bạn muốn luyện nói về chủ đề gì?</h2>
+          <p class="topic-hub-subtitle">Chọn một từ khóa chủ đề bên dưới hoặc tự gõ chủ đề bất kỳ bạn thích để bắt đầu:</p>
         </div>
 
         <div class="topic-custom-box">
-          <input type="text" id="input-custom-topic" placeholder="${isZh ? '💡 输入任意话题 (例如: 去三亚旅游、吃火锅、宠物狗...)' : '💡 Tự nhập chủ đề bạn thích (vd: Đi phượt Đà Lạt, Mua xe mới, Thú cưng...)'}" />
-          <button id="btn-start-custom-topic">${isZh ? '开始 ➔' : 'Bắt Đầu ➔'}</button>
+          <input type="text" id="input-custom-topic" placeholder="💡 Tự gõ chủ đề bạn muốn luyện (vd: Đi phượt Đà Lạt, Mua xe mới, Thú cưng...)" />
+          <button id="btn-start-custom-topic">Bắt Đầu ➔</button>
         </div>
 
         <div class="topic-chips-grid">
