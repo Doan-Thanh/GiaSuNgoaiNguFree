@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Thống Kê Hoạt Động — Gia Sư Ngoại Ngữ Free</title>
+  <title>Bảng Giám Sát Nội Bộ — Gia Sư Ngoại Ngữ Free</title>
   <link rel="icon" type="image/png" href="/static/img/app-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -238,19 +238,70 @@
       50% { transform: scale(1.2); opacity: 1; }
       100% { transform: scale(0.9); opacity: 0.7; }
     }
+
+    /* LOCK SCREEN */
+    .lock-screen {
+      max-width: 380px;
+      margin: 80px auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .lock-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .lock-input:focus {
+      border-color: var(--accent-cyan);
+    }
+    .lock-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div class="stats-container">
+  <!-- LOCK SCREEN FOR AUTHOR ONLY -->
+  <div class="lock-screen" id="stats-lock-screen" style="display:none;">
+    <div style="font-size: 2.6rem; margin-bottom: 12px;">🔒</div>
+    <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 6px;">Khu Vực Quản Trị Nội Bộ</h2>
+    <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+      Trang giám sát lượt dùng này chỉ dành riêng cho tác giả <b>ThanhBooks</b>.
+    </p>
+    <input type="password" id="input-stats-key" class="lock-input" placeholder="Nhập mật mã quản trị..." autocomplete="off">
+    <button id="btn-unlock-stats" class="lock-btn">Mở Khóa Bảng Thống Kê</button>
+    <div id="lock-error" style="color: var(--accent-rose); font-size: 0.82rem; margin-top: 12px; display: none;">Mật mã không chính xác, vui lòng thử lại!</div>
+  </div>
+
+  <!-- MAIN DASHBOARD CONTAINER -->
+  <div class="stats-container" id="stats-dashboard" style="display:none;">
     <!-- HEADER -->
     <header class="stats-header">
       <div class="header-brand">
         <h1>📊 Bảng Giám Sát Người Dùng</h1>
-        <p>Gia Sư Ngoại Ngữ Free • Phát triển bởi <b>ThanhBooks (Đoàn Đức Thanh)</b></p>
+        <p>Gia Sư Ngoại Ngữ Free • Dành riêng cho <b>ThanhBooks (Đoàn Đức Thanh)</b></p>
       </div>
       <div class="header-actions">
         <a href="/" class="btn-action primary">🏠 Về Trang Học</a>
         <button class="btn-action" id="btn-refresh">🔄 Làm Mới</button>
+        <button class="btn-action" id="btn-lock" title="Khóa lại" style="color:var(--text-muted);">🔒 Khóa</button>
       </div>
     </header>
 
@@ -339,80 +390,150 @@
 
     <!-- FOOTER -->
     <footer class="status-footer">
-      <span class="live-dot"></span> Hệ thống đang giám sát trực tuyến • Dữ liệu lưu trữ bảo mật 100%
+      <span class="live-dot"></span> Bảng theo dõi riêng tư của tác giả ThanhBooks • Bảo mật 100%
     </footer>
   </div>
 
   <script>
-    async function loadStats() {
+    let activeAdminKey = new URLSearchParams(window.location.search).get('key') || localStorage.getItem('thanhbooks_admin_key') || '';
+
+    const lockScreen = document.getElementById('stats-lock-screen');
+    const dashboard = document.getElementById('stats-dashboard');
+    const inputKey = document.getElementById('input-stats-key');
+    const btnUnlock = document.getElementById('btn-unlock-stats');
+    const lockError = document.getElementById('lock-error');
+    const btnRefresh = document.getElementById('btn-refresh');
+    const btnLock = document.getElementById('btn-lock');
+
+    async function loadStats(keyToTry) {
+      const key = keyToTry || activeAdminKey;
+      if (!key) {
+        showLockScreen();
+        return;
+      }
+
       try {
-        const res = await fetch('/api/stats');
+        const res = await fetch(`/api/stats?key=${encodeURIComponent(key)}`);
+        if (!res.ok) {
+          showLockScreen(true);
+          return;
+        }
+
         const data = await res.json();
-
-        // KPIs
-        document.getElementById('val-total-visits').textContent = (data.total_visits || 0).toLocaleString();
-        document.getElementById('val-today-visits').textContent = (data.visits_today || 0).toLocaleString();
-        document.getElementById('val-total-chats').textContent = (data.total_chats || 0).toLocaleString();
-        document.getElementById('val-today-chats').textContent = (data.chats_today || 0).toLocaleString();
-
-        const en = data.chats_by_lang?.en || 0;
-        const zh = data.chats_by_lang?.zh || 0;
-        const totalLang = en + zh || 1;
-        document.getElementById('val-chats-en').textContent = en.toLocaleString();
-        document.getElementById('val-percent-en').textContent = Math.round((en / totalLang) * 100) + '%';
-        document.getElementById('val-chats-zh').textContent = zh.toLocaleString();
-        document.getElementById('val-percent-zh').textContent = Math.round((zh / totalLang) * 100) + '%';
-
-        // Devices
-        const mobile = data.devices?.mobile || 0;
-        const desktop = data.devices?.desktop || 0;
-        const totalDev = mobile + desktop || 1;
-        document.getElementById('val-mobile-count').textContent = mobile + ' (' + Math.round((mobile / totalDev) * 100) + '%)';
-        document.getElementById('val-desktop-count').textContent = desktop + ' (' + Math.round((desktop / totalDev) * 100) + '%)';
-        document.getElementById('bar-mobile').style.width = Math.round((mobile / totalDev) * 100) + '%';
-        document.getElementById('bar-desktop').style.width = Math.round((desktop / totalDev) * 100) + '%';
-        document.getElementById('val-last-active').textContent = data.last_active || '--';
-
-        // Scenarios
-        const scenContainer = document.getElementById('scenarios-list');
-        const scenarios = data.chats_by_scenario || {};
-        const scenEntries = Object.entries(scenarios).sort((a, b) => b[1] - a[1]);
-        if (scenEntries.length === 0) {
-          scenContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:6px;">Chưa có dữ liệu hội thoại.</p>';
-        } else {
-          scenContainer.innerHTML = scenEntries.map(([id, cnt]) => `
-            <div class="scenario-item">
-              <span>💬 <b>${id}</b></span>
-              <span class="scenario-count">${cnt} lượt</span>
-            </div>
-          `).join('');
-        }
-
-        // Recent Activity
-        const actContainer = document.getElementById('activity-list');
-        const activities = data.recent_activities || [];
-        if (activities.length === 0) {
-          actContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào.</p>';
-        } else {
-          actContainer.innerHTML = activities.map(act => {
-            const isVisit = act.type === 'visit';
-            return `
-              <div class="activity-item">
-                <span class="activity-time">${act.time}</span>
-                <span class="activity-tag ${isVisit ? 'tag-visit' : 'tag-chat'}">${isVisit ? 'Truy cập' : 'Hội thoại'}</span>
-                <span class="activity-desc">${act.desc}</span>
-              </div>
-            `;
-          }).join('');
-        }
+        activeAdminKey = key;
+        localStorage.setItem('thanhbooks_admin_key', activeAdminKey);
+        showDashboard();
+        renderDashboard(data);
       } catch (err) {
         console.error('Lỗi tải thống kê:', err);
+        showLockScreen(true);
       }
     }
 
-    document.getElementById('btn-refresh').addEventListener('click', loadStats);
+    function showLockScreen(isError = false) {
+      lockScreen.style.display = 'block';
+      dashboard.style.display = 'none';
+      if (isError) {
+        lockError.style.display = 'block';
+      } else {
+        lockError.style.display = 'none';
+      }
+    }
+
+    function showDashboard() {
+      lockScreen.style.display = 'none';
+      dashboard.style.display = 'block';
+      lockError.style.display = 'none';
+    }
+
+    function renderDashboard(data) {
+      // KPIs
+      document.getElementById('val-total-visits').textContent = (data.total_visits || 0).toLocaleString();
+      document.getElementById('val-today-visits').textContent = (data.visits_today || 0).toLocaleString();
+      document.getElementById('val-total-chats').textContent = (data.total_chats || 0).toLocaleString();
+      document.getElementById('val-today-chats').textContent = (data.chats_today || 0).toLocaleString();
+
+      const en = data.chats_by_lang?.en || 0;
+      const zh = data.chats_by_lang?.zh || 0;
+      const totalLang = en + zh || 1;
+      document.getElementById('val-chats-en').textContent = en.toLocaleString();
+      document.getElementById('val-percent-en').textContent = Math.round((en / totalLang) * 100) + '%';
+      document.getElementById('val-chats-zh').textContent = zh.toLocaleString();
+      document.getElementById('val-percent-zh').textContent = Math.round((zh / totalLang) * 100) + '%';
+
+      // Devices
+      const mobile = data.devices?.mobile || 0;
+      const desktop = data.devices?.desktop || 0;
+      const totalDev = mobile + desktop || 1;
+      document.getElementById('val-mobile-count').textContent = mobile + ' (' + Math.round((mobile / totalDev) * 100) + '%)';
+      document.getElementById('val-desktop-count').textContent = desktop + ' (' + Math.round((desktop / totalDev) * 100) + '%)';
+      document.getElementById('bar-mobile').style.width = Math.round((mobile / totalDev) * 100) + '%';
+      document.getElementById('bar-desktop').style.width = Math.round((desktop / totalDev) * 100) + '%';
+      document.getElementById('val-last-active').textContent = data.last_active || '--';
+
+      // Scenarios
+      const scenContainer = document.getElementById('scenarios-list');
+      const scenarios = data.chats_by_scenario || {};
+      const scenEntries = Object.entries(scenarios).sort((a, b) => b[1] - a[1]);
+      if (scenEntries.length === 0) {
+        scenContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:6px;">Chưa có dữ liệu hội thoại.</p>';
+      } else {
+        scenContainer.innerHTML = scenEntries.map(([id, cnt]) => `
+          <div class="scenario-item">
+            <span>💬 <b>${id}</b></span>
+            <span class="scenario-count">${cnt} lượt</span>
+          </div>
+        `).join('');
+      }
+
+      // Recent Activity
+      const actContainer = document.getElementById('activity-list');
+      const activities = data.recent_activities || [];
+      if (activities.length === 0) {
+        actContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào.</p>';
+      } else {
+        actContainer.innerHTML = activities.map(act => {
+          const isVisit = act.type === 'visit';
+          return `
+            <div class="activity-item">
+              <span class="activity-time">${act.time}</span>
+              <span class="activity-tag ${isVisit ? 'tag-visit' : 'tag-chat'}">${isVisit ? 'Truy cập' : 'Hội thoại'}</span>
+              <span class="activity-desc">${act.desc}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    btnUnlock.addEventListener('click', () => {
+      const enteredKey = inputKey.value.trim();
+      if (enteredKey) {
+        loadStats(enteredKey);
+      }
+    });
+
+    inputKey.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        const enteredKey = inputKey.value.trim();
+        if (enteredKey) loadStats(enteredKey);
+      }
+    });
+
+    btnRefresh.addEventListener('click', () => loadStats());
+
+    btnLock.addEventListener('click', () => {
+      localStorage.removeItem('thanhbooks_admin_key');
+      activeAdminKey = '';
+      showLockScreen(false);
+    });
+
+    // Khởi chạy
     loadStats();
-    setInterval(loadStats, 10000); // Tự động làm mới mỗi 10 giây
+    setInterval(() => {
+      if (activeAdminKey && dashboard.style.display !== 'none') {
+        loadStats(activeAdminKey);
+      }
+    }, 10000);
   </script>
 </body>
 </html>

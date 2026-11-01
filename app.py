@@ -71,6 +71,8 @@ async def serve_index(request: Request):
             return HTMLResponse(content=f.read())
     return HTMLResponse("<h3>Chưa tìm thấy templates/index.html</h3>")
 
+ADMIN_KEYS = {"thanhbooks", "8335897"}
+
 @app.get("/stats", response_class=HTMLResponse)
 async def serve_stats():
     stats_path = os.path.join(BASE_DIR, "templates", "stats.html")
@@ -80,7 +82,9 @@ async def serve_stats():
     return HTMLResponse("<h3>Chưa tìm thấy templates/stats.html</h3>")
 
 @app.get("/api/stats")
-async def get_stats_data():
+async def get_stats_data(key: str = ""):
+    if key not in ADMIN_KEYS:
+        raise HTTPException(status_code=403, detail="Mật mã quản trị không chính xác.")
     return analytics.get_stats_summary()
 
 @app.get("/api/config")
