@@ -25,7 +25,7 @@ SCENARIOS = {
     "zh": [
         {
             "id": "free_zh",
-            "title": "💬 Tán Gẫu Đời Thường Tiếng Trung (日常闲聊)",
+            "title": "💬 Trò Chuyện Tự Do (日常闲聊)",
             "description": "Luyện phản xạ giao tiếp tự nhiên, luyện thanh điệu và ngữ pháp tiếng Trung cơ bản.",
             "botRole": "Bạn học người Trung Quốc vui vẻ, kiên nhẫn",
             "initialHanzi": "你好啊！很高兴和你练习中文。你学中文多久了？平时最喜欢做什么？",
