@@ -809,6 +809,97 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- HƯỚNG DẪN GHIM APP RA MÀN HÌNH CHÍNH (PWA INSTALL GUIDE) ---
+  const modalInstallGuide = document.getElementById('modal-install-guide');
+  const btnOpenInstallGuide = document.getElementById('btn-open-install-guide');
+  const btnOpenInstallGuideSettings = document.getElementById('btn-open-install-guide-settings');
+  const btnCloseInstallGuide = document.getElementById('btn-close-install-guide');
+  const btnCloseGuideDone = document.getElementById('btn-close-guide-done');
+  const tabBtnIos = document.getElementById('tab-btn-ios');
+  const tabBtnAndroid = document.getElementById('tab-btn-android');
+  const guideContentIos = document.getElementById('guide-content-ios');
+  const guideContentAndroid = document.getElementById('guide-content-android');
+  const androidPwaBanner = document.getElementById('android-pwa-banner');
+  const btnTriggerPwa = document.getElementById('btn-trigger-pwa');
+
+  function switchInstallTab(tab) {
+    if (tab === 'ios') {
+      if (tabBtnIos) tabBtnIos.classList.add('active');
+      if (tabBtnAndroid) tabBtnAndroid.classList.remove('active');
+      if (guideContentIos) guideContentIos.style.display = 'block';
+      if (guideContentAndroid) guideContentAndroid.style.display = 'none';
+    } else {
+      if (tabBtnAndroid) tabBtnAndroid.classList.add('active');
+      if (tabBtnIos) tabBtnIos.classList.remove('active');
+      if (guideContentAndroid) guideContentAndroid.style.display = 'block';
+      if (guideContentIos) guideContentIos.style.display = 'none';
+    }
+  }
+
+  function openInstallGuideModal() {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    switchInstallTab(isAndroid ? 'android' : 'ios');
+    if (modalInstallGuide) modalInstallGuide.style.display = 'flex';
+  }
+
+  if (btnOpenInstallGuide) {
+    btnOpenInstallGuide.addEventListener('click', () => {
+      if (modalDonate) modalDonate.style.display = 'none';
+      openInstallGuideModal();
+    });
+  }
+
+  if (btnOpenInstallGuideSettings) {
+    btnOpenInstallGuideSettings.addEventListener('click', () => {
+      if (modalSettings) modalSettings.style.display = 'none';
+      openInstallGuideModal();
+    });
+  }
+
+  if (btnCloseInstallGuide) {
+    btnCloseInstallGuide.addEventListener('click', () => {
+      if (modalInstallGuide) modalInstallGuide.style.display = 'none';
+    });
+  }
+
+  if (btnCloseGuideDone) {
+    btnCloseGuideDone.addEventListener('click', () => {
+      if (modalInstallGuide) modalInstallGuide.style.display = 'none';
+    });
+  }
+
+  if (tabBtnIos) {
+    tabBtnIos.addEventListener('click', () => switchInstallTab('ios'));
+  }
+
+  if (tabBtnAndroid) {
+    tabBtnAndroid.addEventListener('click', () => switchInstallTab('android'));
+  }
+
+  // Bắt sự kiện beforeinstallprompt (Android Chrome tự động)
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (androidPwaBanner) {
+      androidPwaBanner.style.display = 'block';
+    }
+  });
+
+  if (btnTriggerPwa) {
+    btnTriggerPwa.addEventListener('click', async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('🎉 Đang tiến hành cài đặt ra Màn hình chính...');
+          if (modalInstallGuide) modalInstallGuide.style.display = 'none';
+        }
+        deferredInstallPrompt = null;
+      }
+    });
+  }
+
   btnSaveSettings.addEventListener('click', async () => {
     const geminiApiKey = inputApiKey.value.trim();
     const geminiModel = selectModel ? selectModel.value : 'gemini-3.5-flash-lite';

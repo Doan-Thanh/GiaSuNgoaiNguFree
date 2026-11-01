@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="/static/img/app-icon.png">
   <link rel="manifest" href="/static/manifest.json">
-  <link rel="stylesheet" href="/static/css/app.css?v=3.1">
+  <link rel="stylesheet" href="/static/css/app.css?v=3.2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -146,6 +146,12 @@
         </div>
 
         <button class="btn-save-settings" id="btn-save-settings">Lưu Cài Đặt</button>
+
+        <div style="text-align:center; margin-top:14px; padding-top:10px; border-top:1px dashed rgba(255,255,255,0.1);">
+          <button type="button" id="btn-open-install-guide-settings" class="btn-guide-link">
+            📲 Hướng dẫn ghim App ra màn hình chính (iPhone & Android)
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -203,11 +209,104 @@
           </div>
         </div>
 
+        <!-- HƯỚNG DẪN GHIM APP RA MÀN HÌNH CHÍNH -->
+        <div class="install-prompt-card" id="btn-open-install-guide">
+          <div class="install-card-left">
+            <span style="font-size: 1.5rem;">📲</span>
+            <div>
+              <div style="font-weight: 700; font-size: 0.9rem; color: #fff;">Ghim ra màn hình chính điện thoại</div>
+              <div style="font-size: 0.76rem; color: #94a3b8;">Mở nhanh 1-chạm toàn màn hình như App tải về</div>
+            </div>
+          </div>
+          <span class="install-badge-arrow">Xem hướng dẫn ➔</span>
+        </div>
+
         <button class="btn-save-settings" id="btn-done-donate" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; margin-top: 14px;">Bắt Đầu Luyện Nói Ngay! 🎙️</button>
       </div>
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=3.1"></script>
+  <!-- MODAL: HƯỚNG DẪN GHIM RA MÀN HÌNH ĐIỆN THOẠI -->
+  <div class="modal-backdrop" id="modal-install-guide" style="display:none;">
+    <div class="modal-sheet" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 style="display:flex; align-items:center; gap:8px;">📲 Ghim Ra Màn Hình Chính</h3>
+        <button class="btn-close-modal" id="btn-close-install-guide">✕</button>
+      </div>
+      <div class="settings-content" style="padding: 10px 4px 18px;">
+        <p style="font-size:0.86rem; color:var(--text-secondary); line-height:1.5; margin-bottom:14px;">
+          Tạo biểu tượng mở nhanh trên màn hình điện thoại để học mọi lúc mọi nơi, hiển thị toàn màn hình không có thanh trình duyệt:
+        </p>
+
+        <!-- TABS CHỌN HỆ ĐIỀU HÀNH -->
+        <div class="guide-tabs">
+          <button class="guide-tab-btn active" id="tab-btn-ios" data-tab="ios">🍎 iPhone (Safari)</button>
+          <button class="guide-tab-btn" id="tab-btn-android" data-tab="android">🤖 Android (Chrome)</button>
+        </div>
+
+        <!-- HƯỚNG DẪN IPHONE -->
+        <div class="guide-tab-content" id="guide-content-ios">
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <b>Mở bằng Safari:</b> Đảm bảo bạn đang mở web này trên trình duyệt <b>Safari</b> của iPhone.
+              <small style="display:block; color:#f59e0b; margin-top:3px;">* Nếu đang mở từ Zalo/Facebook, bấm dấu 3 chấm góc trên chọn <i>"Mở bằng Safari"</i>.</small>
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <b>Bấm nút Chia sẻ:</b> Nhấn vào biểu tượng <b>[↑]</b> (ô vuông có mũi tên chỉ lên) ở thanh công cụ dưới đáy màn hình Safari.
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <b>Chọn "Thêm vào MH chính":</b> Vuốt danh sách menu lên một chút, tìm và chọn dòng <b>"Thêm vào MH chính"</b> (Add to Home Screen) có icon dấu <b>[+]</b>.
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <b>Bấm "Thêm":</b> Nhấn chữ <b>"Thêm"</b> ở góc trên cùng bên phải. Biểu tượng <b>Gia Sư AI</b> sẽ xuất hiện ngay ngoài màn hình chính!
+            </div>
+          </div>
+        </div>
+
+        <!-- HƯỚNG DẪN ANDROID -->
+        <div class="guide-tab-content" id="guide-content-android" style="display:none;">
+          <div id="android-pwa-banner" style="display:none; margin-bottom:12px;">
+            <button id="btn-trigger-pwa" class="btn-save-settings" style="background:linear-gradient(135deg, #10b981, #059669); margin-top:0; padding:10px;">
+              📲 Bấm Vào Đây Để Cài Đặt Ngay
+            </button>
+            <div style="font-size:0.75rem; color:#94a3b8; text-align:center; margin-top:4px;">Thiết bị hỗ trợ cài đặt 1-chạm tự động</div>
+          </div>
+
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <b>Bấm Menu 3 chấm:</b> Mở web bằng Chrome, nhấn vào biểu tượng <b>3 dấu chấm dọc ⋮</b> ở góc trên cùng bên phải.
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <b>Chọn Cài đặt:</b> Tìm và nhấn chọn <b>"Cài đặt ứng dụng"</b> (hoặc <b>"Thêm vào Màn hình chính"</b>).
+            </div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <b>Xác nhận:</b> Nhấn <b>"Cài đặt" / "Thêm"</b>. Ứng dụng sẽ được đưa ra màn hình điện thoại như một app độc lập!
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-save-settings" id="btn-close-guide-done" style="background:#3b82f6; color:#fff; margin-top:16px;">Đã Hiểu, Đóng Hướng Dẫn</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v=3.2"></script>
 </body>
 </html>
