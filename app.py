@@ -179,7 +179,7 @@ def launch_server():
     logger.info("=" * 60)
     logger.info("  🎉 GIA SƯ NGOẠI NGỮ FREE (TIẾNG ANH & TIẾNG TRUNG) ĐÃ KHỞI CHẠY!")
     logger.info(f"  🌐 Truy cập Web App: {url}")
-    logger.info("  👤 Phát triển bởi: ThanhBooks (Đoàn Đức Thành)")
+    logger.info("  👤 Phát triển bởi: ThanhBooks (Đoàn Đức Thanh)")
     logger.info("=" * 60)
 
     if not is_cloud:

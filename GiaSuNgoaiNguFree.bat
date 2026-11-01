@@ -17,7 +17,7 @@ echo [2/2] Trình duyệt web sẽ tự động mở sau vài giây!
 echo.
 echo ----------------------------------------------------------------------
 echo  * Tên ứng dụng: Gia Sư Ngoại Ngữ Free
-echo  * Tác giả phát triển: THANHBOOKS (Đoàn Đức Thành)
+echo  * Tác giả phát triển: THANHBOOKS (Đoàn Đức Thanh)
 echo  * Hỗ trợ: Tiếng Anh (US/UK) & Tiếng Trung (Hanzi + Pinyin + Dịch nghĩa)
 echo  * Tích hợp: Trí tuệ nhân tạo AI thông minh (Miễn phí 100%%)
 echo  * ☕ Mời tác giả 1 ly cà phê: Xem mục [Cài đặt ⚙️] hoặc file HUONG_DAN_SU_DUNG.md

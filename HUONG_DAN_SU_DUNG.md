@@ -2,7 +2,7 @@
 
 Gia sư trí tuệ nhân tạo luyện nói ngoại ngữ 1-kèm-1 thông minh, hiện đại và hoàn toàn **Miễn Phí**, hỗ trợ song song cả **Tiếng Anh (US/UK)** và **Tiếng Trung Quốc (Bắc Kinh)**.
 
-* **Phát triển bởi:** THANHBOOKS (Đoàn Đức Thành)
+* **Phát triển bởi:** THANHBOOKS (Đoàn Đức Thanh)
 
 ---
 
