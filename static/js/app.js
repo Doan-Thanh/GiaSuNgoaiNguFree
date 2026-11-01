@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         feedback: "Bấm vào biểu tượng loa 🔊 để nghe phát âm mẫu, hoặc bấm vào các câu gợi ý phía dưới để bắt đầu nói!",
         suggested_replies: initialSuggestions
       });
-      playTTSAudio(scenario.initialHanzi, 'zh');
+      playSpeechWithFallback(scenario.initialHanzi, 'zh', null, null);
     } else {
       const initialText = scenario.initialMessage;
       chatHistory.push({ role: 'assistant', content: initialText });
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         feedback: "Welcome! Tap the speaker 🔊 to hear native pronunciation, or tap any suggestion chip below to reply!",
         suggested_replies: initialSuggestions
       });
-      playTTSAudio(scenario.initialMessage, 'en');
+      playSpeechWithFallback(scenario.initialMessage, 'en', null, null);
     }
   }
 
@@ -392,21 +392,20 @@ document.addEventListener('DOMContentLoaded', () => {
     row.innerHTML = `<div class="msg-bubble">${contentHtml}</div>`;
     chatMessages.appendChild(row);
 
-    row.querySelector('.speaker-btn').addEventListener('click', (e) => {
-      const textToPlay = e.currentTarget.getAttribute('data-speak');
-      if (audioUrl) {
-        new Audio(audioUrl).play();
-      } else {
-        playTTSAudio(textToPlay, currentLang);
-      }
-    });
+    const speakerBtn = row.querySelector('.speaker-btn');
+    if (speakerBtn) {
+      speakerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const textToPlay = e.currentTarget.getAttribute('data-speak') || speakText;
+        playSpeechWithFallback(textToPlay, currentLang, audioUrl, speakerBtn);
+      });
+    }
 
     renderSuggestions(data.suggested_replies || []);
     scrollToBottom();
 
     if (audioUrl) {
-      const sound = new Audio(audioUrl);
-      sound.play().catch(e => console.log('Autoplay blocked:', e));
+      playSpeechWithFallback(speakText, currentLang, audioUrl, speakerBtn);
     }
   }
 
@@ -506,10 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (speakerBtn) {
       speakerBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        speakerBtn.textContent = '⏳';
-        playTTSAudio(parsed.cleanMsg, currentLang).finally(() => {
-          speakerBtn.textContent = '🔊';
-        });
+        playSpeechWithFallback(parsed.cleanMsg, currentLang, null, speakerBtn);
       });
     }
 
@@ -573,19 +569,152 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function playTTSAudio(text, lang) {
+  // --- ROBUST AUDIO PLAYBACK ENGINE (CHỐNG ĐƠ, PHÒNG NGỪA AUTOPLAY SAFARI & DỰ PHÒNG NATIVE) ---
+  let sharedAudio = null;
+  let isAudioUnlocked = false;
+
+  function unlockAudio() {
+    if (isAudioUnlocked) return;
     try {
+      if (!sharedAudio) sharedAudio = new Audio();
+      sharedAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      sharedAudio.play().then(() => {
+        isAudioUnlocked = true;
+      }).catch(() => {});
+    } catch (e) {}
+  }
+  document.addEventListener('touchstart', unlockAudio, { once: true });
+  document.addEventListener('click', unlockAudio, { once: true });
+
+  // Khởi động trước voices Web Speech
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  function stopAllSpeech() {
+    if (sharedAudio) {
+      try {
+        sharedAudio.pause();
+        sharedAudio.currentTime = 0;
+      } catch (e) {}
+    }
+    if ('speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch (e) {}
+    }
+    document.querySelectorAll('.speaker-btn, .chip-speaker-btn').forEach(btn => {
+      btn.textContent = '🔊';
+      btn.classList.remove('playing');
+    });
+  }
+
+  async function playSpeechWithFallback(text, lang, audioDataUrl = null, btnElement = null) {
+    if (!text || !text.trim()) return;
+
+    stopAllSpeech();
+
+    if (btnElement) {
+      btnElement.textContent = '🔊🎶';
+      btnElement.classList.add('playing');
+    }
+
+    const resetButton = () => {
+      if (btnElement) {
+        btnElement.textContent = '🔊';
+        btnElement.classList.remove('playing');
+      }
+    };
+
+    // 1. Thử phát từ audioDataUrl có sẵn từ Edge-TTS
+    if (audioDataUrl && audioDataUrl.startsWith('data:audio')) {
+      try {
+        if (!sharedAudio) sharedAudio = new Audio();
+        sharedAudio.src = audioDataUrl;
+        sharedAudio.onended = resetButton;
+        sharedAudio.onerror = () => {
+          fallbackWebSpeech(text, lang, resetButton);
+        };
+        await sharedAudio.play();
+        return;
+      } catch (err) {
+        console.warn('Audio play error, chuyển sang Web Speech:', err);
+      }
+    }
+
+    // 2. Nếu chưa có audioDataUrl, thử lấy từ /api/tts (timeout 3.5s chống đơ)
+    let fetchedAudioUrl = null;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, lang })
+        body: JSON.stringify({ text, lang }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const data = await res.json();
-      if (data.audio) {
-        new Audio(data.audio).play();
+      if (data.audio && data.audio.startsWith('data:audio')) {
+        fetchedAudioUrl = data.audio;
       }
     } catch (err) {
-      console.warn('Lỗi phát âm TTS:', err);
+      console.warn('Fetch /api/tts timeout hoặc lỗi:', err);
+    }
+
+    if (fetchedAudioUrl) {
+      try {
+        if (!sharedAudio) sharedAudio = new Audio();
+        sharedAudio.src = fetchedAudioUrl;
+        sharedAudio.onended = resetButton;
+        sharedAudio.onerror = () => {
+          fallbackWebSpeech(text, lang, resetButton);
+        };
+        await sharedAudio.play();
+        return;
+      } catch (err) {
+        console.warn('Play fetched audio bị chặn, chuyển sang Web Speech:', err);
+      }
+    }
+
+    // 3. Dự phòng cấp cao nhất: Trình phát giọng nói Web Speech API tích hợp của thiết bị
+    fallbackWebSpeech(text, lang, resetButton);
+  }
+
+  function fallbackWebSpeech(text, lang, onEndCallback) {
+    if (!('speechSynthesis' in window)) {
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+      const cleanText = text.replace(/[\(\)\[\]（）\*]/g, ' ').trim();
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
+      utterance.rate = 0.95;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        const targetPrefix = lang === 'zh' ? 'zh' : 'en';
+        const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(targetPrefix));
+        if (bestVoice) utterance.voice = bestVoice;
+      }
+
+      utterance.onend = () => {
+        if (onEndCallback) onEndCallback();
+      };
+      utterance.onerror = () => {
+        if (onEndCallback) onEndCallback();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error('Web Speech error:', e);
+      if (onEndCallback) onEndCallback();
     }
   }
 
