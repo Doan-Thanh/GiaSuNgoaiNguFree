@@ -13,11 +13,12 @@ SCENARIOS = {
             "description": "Tán gẫu thoải mái về sở thích, âm nhạc, phim ảnh, văn hóa cùng bạn bản xứ.",
             "botRole": "Người bạn bản xứ vui tính đến từ California",
             "initialMessage": "Hey! How's your day going so far? Doing anything fun today?",
+            "initialIpa": "/heɪ! haʊz jʊər deɪ ˈɡoʊɪŋ soʊ fɑːr? ˈduːɪŋ ˈeniθɪŋ fʌn təˈdeɪ?/",
             "initialTranslation": "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Có làm gì vui không?",
             "initialSuggestions": [
-                "It's going great! Just relaxing with some music and practicing English.",
-                "A bit busy with work today, but looking forward to the weekend!",
-                "Not much, just trying out this new AI app to improve my speaking skills."
+                "It's going great! Just relaxing with some music. (/ɪts ˈɡoʊɪŋ ɡreɪt! dʒʌst rɪˈlæksɪŋ wɪð səm ˈmjuːzɪk/ - Mọi thứ đang rất tuyệt! Mình đang thư giãn với chút âm nhạc.)",
+                "A bit busy with work, but looking forward to the weekend! (/ə bɪt ˈbɪzi wɪð wɜːrk, bʌt ˈlʊkɪŋ ˈfɔːrwərd tuː ðə ˈwiːkend/ - Hơi bận với công việc, nhưng đang mong đến cuối tuần!)",
+                "Not much, just practicing English with this app. (/nɑːt mʌtʃ, dʒʌst ˈpræktɪsɪŋ ˈɪŋɡlɪʃ wɪð ðɪs æp/ - Không có gì nhiều, mình chỉ đang luyện tiếng Anh với ứng dụng này.)"
             ]
         },
         {
@@ -26,11 +27,12 @@ SCENARIOS = {
             "description": "Thực hành gọi cà phê, hỏi giá, tùy chỉnh lượng đường/đá tại quán cà phê Mỹ.",
             "botRole": "Barista thân thiện tại quán Starbucks New York",
             "initialMessage": "Hi there! Welcome to Central Perk Café. What can I get started for you today?",
+            "initialIpa": "/haɪ ðer! ˈwelkəm tuː ˈsentrəl pɜːrk kæˈfeɪ. wʌt kæn aɪ ɡet ˈstɑːrtɪd fər juː təˈdeɪ?/",
             "initialTranslation": "Xin chào! Chào mừng bạn đến quán Central Perk Café. Tôi có thể chuẩn bị đồ uống gì cho bạn hôm nay?",
             "initialSuggestions": [
-                "Could I get a hot cappuccino with oat milk, please?",
-                "What kind of signature drinks or pastries do you recommend here?",
-                "Just looking at the menu for a moment, thank you!"
+                "Could I get a hot cappuccino with oat milk, please? (/kəd aɪ ɡet ə hɑːt ˌkæpəˈtʃiːnoʊ wɪð oʊt mɪlk, pliːz/ - Cho tôi một ly cappuccino nóng với sữa yến mạch nhé?)",
+                "What kind of signature drinks do you recommend here? (/wʌt kaɪnd əv ˈsɪɡnətʃər drɪŋks duː juː ˌrekəˈmend hɪr/ - Quán có món đồ uống đặc trưng nào gợi ý cho tôi không?)",
+                "Just looking at the menu for a moment, thank you! (/dʒʌst ˈlʊkɪŋ æt ðə ˈmenjuː fər ə ˈmoʊmənt, θæŋk juː/ - Tôi xem menu một chút đã, cảm ơn bạn!)"
             ]
         },
         {
@@ -39,11 +41,12 @@ SCENARIOS = {
             "description": "Luyện tập thủ tục nhận phòng, hỏi pass wifi, yêu cầu phòng view đẹp.",
             "botRole": "Lễ tân khách sạn Marriott London",
             "initialMessage": "Good afternoon, welcome to the Grand Hotel. Do you have a reservation with us?",
+            "initialIpa": "/ɡʊd ˌæftərˈnuːn, ˈwelkəm tuː ðə ɡrænd hoʊˈtel. duː juː hæv ə ˌrezərˈveɪʃən wɪð ʌs?/",
             "initialTranslation": "Chào buổi chiều, chào mừng quý khách đến khách sạn Grand Hotel. Quý khách đã đặt phòng trước chưa ạ?",
             "initialSuggestions": [
-                "Yes, I have a reservation under the name Thanh.",
-                "No, do you have any single rooms available for two nights?",
-                "Could I check in a bit early, please?"
+                "Yes, I have a reservation under the name Thanh. (/jes, aɪ hæv ə ˌrezərˈveɪʃən ˈʌndər ðə neɪm Thanh/ - Vâng, tôi có đặt phòng trước dưới tên Thanh.)",
+                "No, do you have any single rooms available for two nights? (/noʊ, duː juː hæv ˈeni ˈsɪŋɡəl ruːmz əˈveɪləbəl fər tuː naɪts/ - Chưa, khách sạn còn phòng đơn trống trong hai đêm không?)",
+                "Could I check in a bit early, please? (/kəd aɪ tʃek ɪn ə bɪt ˈɜːrli, pliːz/ - Tôi có thể nhận phòng sớm một chút được không?)"
             ]
         },
         {
@@ -52,11 +55,12 @@ SCENARIOS = {
             "description": "Luyện trả lời câu hỏi giới thiệu bản thân, điểm mạnh, kinh nghiệm làm việc.",
             "botRole": "Giám đốc nhân sự công ty công nghệ đa quốc gia",
             "initialMessage": "Thank you for taking the time to speak with me today. Could you briefly introduce yourself?",
+            "initialIpa": "/θæŋk juː fər ˈteɪkɪŋ ðə taɪm tuː spiːk wɪð miː təˈdeɪ. kəd juː ˈbriːfli ˌɪntrəˈduːs jʊərˈself?/",
             "initialTranslation": "Cảm ơn bạn đã dành thời gian trao đổi với tôi hôm nay. Bạn có thể giới thiệu ngắn gọn về bản thân được không?",
             "initialSuggestions": [
-                "Certainly! I have over five years of experience in project management.",
-                "Thank you for having me. My background is in digital marketing and sales.",
-                "Sure! I'm passionate about technology and solving customer problems."
+                "Certainly! I have over five years of experience in project management. (/ˈsɜːrtnli! aɪ hæv ˈoʊvər faɪv jɪərz əv ɪkˈspɪriəns ɪn ˈprɑːdʒekt ˈmænɪdʒmənt/ - Chắc chắn rồi! Tôi có hơn năm năm kinh nghiệm trong quản lý dự án.)",
+                "Thank you for having me. My background is in digital marketing. (/θæŋk juː fər ˈhævɪŋ miː. maɪ ˈbækɡraʊnd ɪz ɪn ˈdɪdʒɪtl ˈmɑːrkɪtɪŋ/ - Cảm ơn anh/chị đã đón tiếp. Chuyên môn của tôi là về tiếp thị số.)",
+                "Sure! I'm passionate about technology and solving customer problems. (/ʃʊr! aɪm ˈpæʃənət əˈbaʊt tekˈnɑːlədʒi ænd ˈsɑːlvɪŋ ˈkʌstəmər ˈprɑːbləmz/ - Vâng! Tôi rất đam mê công nghệ và giải quyết các bài toán của khách hàng.)"
             ]
         },
         {
@@ -65,11 +69,12 @@ SCENARIOS = {
             "description": "Trả lời nhân viên hải quan Mỹ/Anh về mục đích chuyến đi, nơi lưu trú, vé khứ hồi.",
             "botRole": "Sĩ quan hải quan sân bay quốc tế JFK New York",
             "initialMessage": "Good morning. Passport and declaration form, please. What is the primary purpose of your visit to the United States?",
+            "initialIpa": "/ɡʊd ˈmɔːrnɪŋ. ˈpæspɔːrt ænd ˌdekləˈreɪʃən fɔːrm, pliːz. wʌt ɪz ðə ˈpraɪmeri ˈpɜːrpəs əv jʊər ˈvɪzɪt tuː ðə juːˈnaɪtɪd steɪts?/",
             "initialTranslation": "Chào buổi sáng. Xin vui lòng xuất trình hộ chiếu và tờ khai. Mục đích chính chuyến đi đến Mỹ của bạn là gì?",
             "initialSuggestions": [
-                "Here you go. I'm here for sightseeing and traveling for two weeks.",
-                "I'm visiting on business to attend a tech conference in San Francisco.",
-                "I'm visiting some friends and relatives in California for ten days."
+                "Here you go. I'm here for sightseeing and traveling for two weeks. (/hɪr juː ɡoʊ. aɪm hɪr fər ˈsaɪtsiːɪŋ ænd ˈtrævəlɪŋ fər tuː wiːks/ - Đây ạ. Tôi đến đây để tham quan du lịch trong hai tuần.)",
+                "I'm visiting on business to attend a tech conference. (/aɪm ˈvɪzɪtɪŋ ɑːn ˈbɪznəs tuː əˈtend ə tek ˈkɑːnfərəns/ - Tôi đi công tác để tham dự một hội nghị công nghệ.)",
+                "I'm visiting some friends and relatives in California for ten days. (/aɪm ˈvɪzɪtɪŋ səm frendz ænd ˈrelətɪvz ɪn ˌkælɪˈfɔːrnjə fər ten deɪz/ - Tôi đến thăm bạn bè và người thân ở California trong mười ngày.)"
             ]
         },
         {
@@ -78,11 +83,12 @@ SCENARIOS = {
             "description": "Báo cáo tiến độ công việc hôm qua, dự định hôm nay và nêu khó khăn cần hỗ trợ.",
             "botRole": "Trưởng dự án kỹ thuật (Project Lead) người Mỹ vui vẻ, thực tế",
             "initialMessage": "Morning everyone! Let's do a quick round for today's standup. What did you finish yesterday and what are you tackling today?",
+            "initialIpa": "/ˈmɔːrnɪŋ ˈevriwʌn! lets duː ə kwɪk raʊnd fər təˈdeɪz ˈstændʌp. wʌt dɪd juː ˈfɪnɪʃ ˈjestərdeɪ ænd wʌt ɑːr juː ˈtæklɪŋ təˈdeɪ?/",
             "initialTranslation": "Chào buổi sáng cả đội! Chúng ta cùng điểm nhanh cuộc họp hôm nay nhé. Hôm qua bạn đã xong việc gì và hôm nay sẽ giải quyết việc gì?",
             "initialSuggestions": [
-                "Yesterday I finished the API integration. Today I'm testing the user interface.",
-                "I wrapped up the bug fixes yesterday. Today I'll work on database optimization.",
-                "I'm a bit blocked on the third-party payment service and need a quick review."
+                "Yesterday I finished the API integration. Today I'm testing the UI. (/ˈjestərdeɪ aɪ ˈfɪnɪʃt ðiː ˌeɪ piː ˈaɪ ˌɪntɪˈɡreɪʃən. təˈdeɪ aɪm ˈtestɪŋ ðə juː aɪ/ - Hôm qua tôi đã hoàn thành tích hợp API. Hôm nay tôi đang kiểm thử giao diện người dùng.)",
+                "I wrapped up the bug fixes yesterday. Today I'll optimize the database. (/aɪ ræpt ʌp ðə bʌɡ ˈfɪksɪz ˈjestərdeɪ. təˈdeɪ aɪl ˈɑːptɪmaɪz ðə ˈdeɪtəbeɪs/ - Hôm qua tôi đã sửa xong các lỗi. Hôm nay tôi sẽ tối ưu hóa cơ sở dữ liệu.)",
+                "I'm a bit blocked on payment gateway and need a quick review. (/aɪm ə bɪt blɑːkt ɑːn ˈpeɪmənt ˈɡeɪtweɪ ænd niːd ə kwɪk rɪˈvjuː/ - Tôi đang bị vướng một chút ở cổng thanh toán và cần xem lại nhanh.)"
             ]
         },
         {
@@ -91,11 +97,12 @@ SCENARIOS = {
             "description": "Phàn nàn lịch sự về sản phẩm lỗi/sai size tại cửa hàng, yêu cầu hoàn tiền vào thẻ.",
             "botRole": "Nhân viên quầy chăm sóc khách hàng tại trung tâm thương mại",
             "initialMessage": "Hi there! Welcome to Customer Service. Are you returning or exchanging an item today?",
+            "initialIpa": "/haɪ ðer! ˈwelkəm tuː ˈkʌstəmər ˈsɜːrvɪs. ɑːr juː rɪˈtɜːrnɪŋ ɔːr ɪksˈtʃeɪndʒɪŋ ən ˈaɪtəm təˈdeɪ?/",
             "initialTranslation": "Xin chào! Chào mừng bạn đến quầy Chăm sóc khách hàng. Hôm nay bạn muốn trả hàng hay đổi sang món khác ạ?",
             "initialSuggestions": [
-                "I'd like to return this jacket. It's the wrong size and has never been worn.",
-                "I'd like to exchange this shirt for a size medium, please.",
-                "There's a defective zipper on this bag. Could I get a full refund?"
+                "I'd like to return this jacket. It's the wrong size and never worn. (/aɪd laɪk tuː rɪˈtɜːrn ðɪs ˈdʒækɪt. ɪts ðə rɔːŋ saɪz ænd ˈnevər wɔːrn/ - Tôi muốn trả lại chiếc áo khoác này. Nó bị sai cỡ và chưa từng mặc.)",
+                "I'd like to exchange this shirt for a size medium, please. (/aɪd laɪk tuː ɪksˈtʃeɪndʒ ðɪs ʃɜːrt fər ə saɪz ˈmiːdiəm, pliːz/ - Tôi muốn đổi chiếc áo sơ mi này lấy cỡ M nhé.)",
+                "There's a defective zipper on this bag. Could I get a full refund? (/ðerz ə dɪˈfektɪv ˈzɪpər ɑːn ðɪs bæɡ. kəd aɪ ɡet ə fʊl ˈriːfʌnd/ - Khóa kéo trên chiếc túi này bị lỗi. Tôi có thể được hoàn tiền đầy đủ không?)"
             ]
         },
         {
@@ -104,11 +111,12 @@ SCENARIOS = {
             "description": "Miêu tả triệu chứng sức khỏe, cảm cúm, đau đầu cho bác sĩ và hỏi cách dùng thuốc.",
             "botRole": "Bác sĩ gia đình tận tâm tại phòng khám",
             "initialMessage": "Good afternoon. Please take a seat. What seems to be bothering you today?",
+            "initialIpa": "/ɡʊd ˌæftərˈnuːn. pliːz teɪk ə siːt. wʌt siːmz tuː biː ˈbɑːðərɪŋ juː təˈdeɪ?/",
             "initialTranslation": "Chào buổi chiều. Mời bạn ngồi. Hôm nay bạn cảm thấy khó chịu ở đâu trong người?",
             "initialSuggestions": [
-                "I've had a severe headache and a mild fever since yesterday morning.",
-                "My stomach has been hurting badly after dinner last night.",
-                "I have a sore throat and a persistent cough. Could you check my throat?"
+                "I've had a severe headache and a mild fever since yesterday. (/aɪv hæd ə sɪˈvɪr ˈhedeɪk ænd ə maɪld ˈfiːvər sɪns ˈjestərdeɪ/ - Tôi bị đau đầu dữ dội và sốt nhẹ từ hôm qua.)",
+                "My stomach has been hurting badly after dinner last night. (/maɪ ˈstʌmək hæz biːn ˈhɜːrtɪŋ ˈbædli ˈæftər ˈdɪnər læst naɪt/ - Bụng tôi đau quằn quại sau bữa tối qua.)",
+                "I have a sore throat and a persistent cough. Could you check it? (/aɪ hæv ə sɔːr θroʊt ænd ə pərˈsɪstənt kɔːf. kəd juː tʃek ɪt/ - Tôi bị đau rát họng và ho dai dẳng. Bác sĩ kiểm tra giúp tôi được không?)"
             ]
         },
         {
@@ -117,11 +125,12 @@ SCENARIOS = {
             "description": "Chọn phim, chọn suất chiếu, chọn ghế giữa rạp và gọi combo bắp phô mai nước ngọt.",
             "botRole": "Nhân viên bán vé rạp chiếu phim AMC",
             "initialMessage": "Hey! Welcome to AMC Cinema. Which movie are you looking to watch today, and how many tickets?",
+            "initialIpa": "/heɪ! ˈwelkəm tuː ˌeɪ em ˈsiː ˈsɪnəmə. wɪtʃ ˈmuːvi ɑːr juː ˈlʊkɪŋ tuː wɑːtʃ təˈdeɪ, ænd haʊ ˈmeni ˈtɪkɪts?/",
             "initialTranslation": "Xin chào! Chào mừng bạn đến rạp phim AMC. Hôm nay bạn muốn xem phim nào và cần mua mấy vé?",
             "initialSuggestions": [
-                "Two tickets for the 7:30 PM action movie in 2D, please.",
-                "What are the best available seats for the sci-fi screening tonight?",
-                "Could we get a large popcorn combo with two Diet Cokes as well?"
+                "Two tickets for the 7:30 PM action movie in 2D, please. (/tuː ˈtɪkɪts fər ðə ˈsevən ˈθɜːrti piː em ˈækʃən ˈmuːvi ɪn tuː diː, pliːz/ - Cho hai vé xem phim hành động suất 7:30 tối bản 2D nhé.)",
+                "What are the best available seats for the sci-fi screening tonight? (/wʌt ɑːr ðə best əˈveɪləbəl siːts fər ðə ˈsaɪ faɪ ˈskriːnɪŋ təˈnaɪt/ - Những ghế tốt nhất còn trống cho suất chiếu viễn tưởng tối nay là ghế nào?)",
+                "Could we get a large popcorn combo with two Diet Cokes as well? (/kəd wiː ɡet ə lɑːrdʒ ˈpɑːpkɔːrn ˈkɑːmboʊ wɪð tuː ˈdaɪət koʊks æz wel/ - Cho chúng tôi một combo bắp rang cỡ lớn cùng hai lon Coca ăn kiêng nữa nhé?)"
             ]
         },
         {
@@ -130,11 +139,12 @@ SCENARIOS = {
             "description": "Báo bồi bàn món ăn bị nguội hoặc đem nhầm món, yêu cầu làm lại và xin hóa đơn.",
             "botRole": "Quản lý nhà hàng Âu chu đáo",
             "initialMessage": "Good evening. How is everything tasting tonight? Is your steak cooked to your liking?",
+            "initialIpa": "/ɡʊd ˈiːvnɪŋ. haʊ ɪz ˈevriθɪŋ ˈteɪstɪŋ təˈnaɪt? ɪz jʊər steɪk kʊkt tuː jʊər ˈlaɪkɪŋ?/",
             "initialTranslation": "Chào buổi tối. Các món ăn tối nay có vừa miệng quý khách không ạ? Miếng bít tết đã đúng độ chín như ý quý khách chưa?",
             "initialSuggestions": [
-                "Actually, I asked for medium-rare, but this steak is completely well-done.",
-                "Excuse me, the soup was served lukewarm. Could you please heat it up?",
-                "Everything is wonderful, thank you! Could we also get the dessert menu?"
+                "Actually, I asked for medium-rare, but this steak is well-done. (/ˈæktʃuəli, aɪ æskt fər ˈmiːdiəm rer, bʌt ðɪs steɪk ɪz wel dʌn/ - Thực ra tôi gọi tái vừa, nhưng miếng bít tết này đã chín kỹ hoàn toàn rồi.)",
+                "Excuse me, the soup was served lukewarm. Could you please heat it up? (/ɪkˈskjuːz miː, ðə suːp wʌz sɜːrvd ˈluːkwɔːrm. kəd juː pliːz hiːt ɪt ʌp/ - Xin lỗi, món súp mang ra hơi nguội. Bạn có thể hâm nóng lại giúp tôi được không?)",
+                "Everything is wonderful, thank you! Could we also get the dessert menu? (/ˈevriθɪŋ ɪz ˈwʌndərfəl, θæŋk juː! kəd wiː ˈɔːlsoʊ ɡet ðə dɪˈzɜːrt ˈmenjuː/ - Mọi thứ rất tuyệt, cảm ơn bạn! Cho chúng tôi xin menu tráng miệng được không?)"
             ]
         }
     ],
@@ -374,7 +384,7 @@ ROLEPLAY CONTEXT:
 - Your Role: {bot_role}
 
 Your tasks:
-1. Respond naturally staying strictly in character as {bot_role} in the scenario: {scenario_title}.
+1. Respond naturally staying strictly in character as {bot_role} in the scenario: {scenario_title}. Keep responses conversational and concise (1-2 sentences).
 2. CRITICAL FOR SUGGESTED REPLIES (suggested_replies):
    - You MUST provide 3 completely fresh, dynamic options directly responding to your latest question in this scenario ({scenario_title}).
    - The suggestions MUST MATCH the conversation context 100%. Never output suggestions from another topic.
@@ -382,11 +392,14 @@ Your tasks:
      + Option 1: Direct confirmation / Making a specific choice
      + Option 2: Asking for details / Inquiring for options or customization
      + Option 3: Politeness / Hesitation / Suggesting an alternative
+   - EACH suggestion MUST STRICTLY follow this 3-part format: "English sentence (/IPA phonetic transcription/ - Bản dịch tiếng Việt tự nhiên)"
+     Example: "I'd love a hot cappuccino, please. (/aɪd lʌv ə hɑːt ˌkæpəˈtʃiːnoʊ, pliːz/ - Cho tôi một ly cappuccino nóng nhé.)"
 3. Output strictly valid JSON:
    - "reply": Natural English response.
-   - "translation_vi": Natural Vietnamese translation.
-   - "feedback": Brief helpful tip in Vietnamese on natural phrasing or grammar.
-   - "suggested_replies": Array of 3 natural, specific conversational phrases the user can say next.
+   - "reply_ipa": International Phonetic Alphabet (IPA) transcription of your reply enclosed in slashes, e.g. "/.../".
+   - "translation_vi": Natural Vietnamese translation of your reply.
+   - "feedback": Brief helpful tip in Vietnamese on natural phrasing, pronunciation notes, or grammar.
+   - "suggested_replies": Array of 3 strings in the exact format "English sentence (/IPA/ - Bản dịch tiếng Việt)".
 """
 
     try:
@@ -427,6 +440,8 @@ Your latest statement to the user: "{last_bot_msg}"
 
 TASK:
 Provide 3 completely FRESH, DIVERSE, and natural alternative responses the learner can say next to your statement.
+Each suggestion MUST follow the 3-part format: "English phrase (/IPA phonetic transcription/ - Bản dịch tiếng Việt tự nhiên)"
+Example: "Sounds wonderful, let's do that! (/saʊndz ˈwʌndərfəl, lets duː ðæt/ - Nghe tuyệt đấy, làm vậy đi!)"
 Output strictly JSON format: {{"suggested_replies": ["...", "...", "..."]}}"""
 
             single_turn_history = [{"role": "user", "content": prompt_text}]
@@ -541,20 +556,21 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
     scenario_info = next((s for s in SCENARIOS.get("en", []) if s["id"] == scenario), None)
     if scenario_info:
         suggestions = scenario_info.get("initialSuggestions", [
-            "Sounds good, could you give me a bit more detail on that?",
-            "What other options or recommendations do you have?",
-            "I'll think about it and let you know shortly, thanks!"
+            "Sounds good, could you give me more details? (/saʊndz ɡʊd, kəd juː ɡɪv miː mɔːr dɪˈteɪlz/ - Nghe hay đấy, bạn có thể cho tôi thêm chi tiết không?)",
+            "What other options or recommendations do you have? (/wʌt ˈʌðər ˈɑːpʃənz ɔːr ˌrekəmenˈdeɪʃənz duː juː hæv/ - Bạn có lựa chọn hoặc gợi ý nào khác không?)",
+            "I'll think about it and let you know shortly. (/aɪl θɪŋk əˈbaʊt ɪt ænd let juː noʊ ˈʃɔːrtli/ - Tôi sẽ cân nhắc và báo lại sớm.)"
         ])
     else:
         suggestions = [
-            "That sounds great, thank you for your help!",
-            "Could you explain a bit more about that?",
-            "Let's move on to another topic!"
+            "That sounds great, thank you for your help! (/ðæt saʊndz ɡreɪt, θæŋk juː fər jʊər help/ - Nghe tuyệt quá, cảm ơn bạn đã giúp đỡ!)",
+            "Could you explain a bit more about that? (/kəd juː ɪkˈspleɪn ə bɪt mɔːr əˈbaʊt ðæt/ - Bạn có thể giải thích thêm một chút về điều đó không?)",
+            "Let's move on to another topic! (/lets muːv ɑːn tuː əˈnʌðər ˈtɑːpɪk/ - Chúng ta chuyển sang chủ đề khác nhé!)"
         ]
 
     return {
         "reply": "Understood! I completely get what you mean. What would you like to explore next?",
+        "reply_ipa": "/ˌʌndərˈstʊd! aɪ kəmˈpliːtli ɡet wʌt juː miːn. wʌt wʊd juː laɪk tuː ɪkˈsplɔːr nekst?/",
         "translation_vi": "Đã hiểu! Tôi hoàn toàn hiểu ý của bạn. Bạn muốn tiếp tục tìm hiểu điều gì tiếp theo?",
-        "feedback": "Great pronunciation and natural phrasing! Keep up the good work.",
+        "feedback": "Phát âm tiếng Anh rất tự nhiên! Hãy chú ý ngữ điệu lên xuống tự nhiên ở cuối câu.",
         "suggested_replies": suggestions
     }

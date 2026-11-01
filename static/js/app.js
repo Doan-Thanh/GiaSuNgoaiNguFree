@@ -246,11 +246,14 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
     });
 
+    togglePinyinBtn.style.display = 'flex';
     if (currentLang === 'zh') {
-      togglePinyinBtn.style.display = 'flex';
+      togglePinyinBtn.innerHTML = '<span class="toggle-icon">Aa</span> Pinyin';
+      togglePinyinBtn.title = 'Bật/Tắt Pinyin';
       inputCustomText.placeholder = 'Nhập tiếng Trung hoặc bấm Mic để nói...';
     } else {
-      togglePinyinBtn.style.display = 'none';
+      togglePinyinBtn.innerHTML = '<span class="toggle-icon">Aa</span> Phiên âm';
+      togglePinyinBtn.title = 'Bật/Tắt Phiên âm IPA';
       inputCustomText.placeholder = 'Nhập tiếng Anh hoặc bấm Mic để nói...';
     }
   }
@@ -333,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
       chatHistory.push({ role: 'assistant', content: initialText });
       appendBotMessage({
         reply: scenario.initialMessage,
+        reply_ipa: scenario.initialIpa || '',
         translation_vi: scenario.initialTranslation,
         feedback: "Welcome! Tap the speaker 🔊 to hear native pronunciation, or tap any suggestion chip below to reply!",
         suggested_replies: initialSuggestions
@@ -373,7 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display:flex; align-items:flex-start;">
           <button class="speaker-btn" data-speak="${escapeHtml(speakText)}">🔊</button>
           <div style="flex:1;">
-            <span>${escapeHtml(data.reply)}</span>
+            <span class="hanzi-text" style="font-size:1.05rem; font-weight:600; color:#f8fafc;">${escapeHtml(data.reply)}</span>
+            ${data.reply_ipa ? `<span class="pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(data.reply_ipa)}</span>` : ''}
             ${data.translation_vi ? `<span class="translation-text" style="display:${showTranslation ? 'block' : 'none'};">${escapeHtml(data.translation_vi)}</span>` : ''}
           </div>
         </div>
@@ -412,17 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function parseSuggestionItem(item, lang) {
     if (!item) return { main: '', pinyin: '', trans: '', cleanMsg: '' };
 
-    if (lang !== 'zh') {
-      let main = item;
-      let trans = '';
-      const match = item.match(/^(.*?)\s*[\(（](.*?)[\)）]\s*$/);
-      if (match) {
-        main = match[1].trim();
-        trans = match[2].trim();
-      }
-      return { main, pinyin: '', trans, cleanMsg: main };
-    }
-
     let main = item;
     let pinyin = '';
     let trans = '';
@@ -435,12 +429,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const parts = inside.split(' - ');
         pinyin = parts[0].trim();
         trans = parts.slice(1).join(' - ').trim();
-      } else if (inside.includes('-')) {
+      } else if (inside.includes(' – ')) {
+        const parts = inside.split(' – ');
+        pinyin = parts[0].trim();
+        trans = parts.slice(1).join(' – ').trim();
+      } else if (inside.includes('-') && (lang === 'zh' || inside.includes('/'))) {
         const parts = inside.split('-');
         pinyin = parts[0].trim();
         trans = parts.slice(1).join('-').trim();
       } else {
-        pinyin = inside;
+        if (lang === 'zh') {
+          pinyin = inside;
+        } else {
+          if (inside.startsWith('/') && inside.endsWith('/')) {
+            pinyin = inside;
+          } else {
+            trans = inside;
+          }
+        }
       }
     } else {
       if (item.includes(' - ')) {
