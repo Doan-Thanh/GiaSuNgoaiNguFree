@@ -196,6 +196,64 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // 2.1 TOGGLE SPEECH PLAYBACK RATE (1.0x ➔ 0.8x ➔ 1.2x)
+  const toggleSpeedBtn = document.getElementById('toggle-speed');
+  const selectSpeechRate = document.getElementById('select-speech-rate');
+  let currentSpeechRate = parseFloat(localStorage.getItem('speechRate')) || 1.0;
+
+  function updateSpeedUI() {
+    if (currentSpeechRate === 0.8) {
+      if (toggleSpeedBtn) {
+        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">🐢</span> 0.8x';
+        toggleSpeedBtn.title = 'Tốc độ: 0.8x (Chậm, nghe rõ phát âm). Bấm để đổi.';
+      }
+      if (selectSpeechRate) selectSpeechRate.value = '0.8';
+    } else if (currentSpeechRate === 1.2) {
+      if (toggleSpeedBtn) {
+        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">🐇</span> 1.2x';
+        toggleSpeedBtn.title = 'Tốc độ: 1.2x (Nhanh, luyện phản xạ). Bấm để đổi.';
+      }
+      if (selectSpeechRate) selectSpeechRate.value = '1.2';
+    } else {
+      currentSpeechRate = 1.0;
+      if (toggleSpeedBtn) {
+        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">⚡</span> 1.0x';
+        toggleSpeedBtn.title = 'Tốc độ: 1.0x (Chuẩn bản ngữ). Bấm để đổi.';
+      }
+      if (selectSpeechRate) selectSpeechRate.value = '1.0';
+    }
+  }
+
+  if (toggleSpeedBtn) {
+    updateSpeedUI();
+    toggleSpeedBtn.addEventListener('click', () => {
+      if (currentSpeechRate === 1.0) {
+        currentSpeechRate = 0.8;
+        showToast('🐢 Đã chuyển tốc độ đọc: 0.8x (Chậm, nghe rõ phát âm)');
+      } else if (currentSpeechRate === 0.8) {
+        currentSpeechRate = 1.2;
+        showToast('🐇 Đã chuyển tốc độ đọc: 1.2x (Nhanh, luyện phản xạ)');
+      } else {
+        currentSpeechRate = 1.0;
+        showToast('⚡ Đã chuyển tốc độ đọc: 1.0x (Chuẩn bản ngữ)');
+      }
+      localStorage.setItem('speechRate', currentSpeechRate);
+      updateSpeedUI();
+
+      if (sharedAudio && !sharedAudio.paused) {
+        sharedAudio.playbackRate = currentSpeechRate;
+      }
+    });
+  }
+
+  if (selectSpeechRate) {
+    selectSpeechRate.addEventListener('change', () => {
+      currentSpeechRate = parseFloat(selectSpeechRate.value) || 1.0;
+      localStorage.setItem('speechRate', currentSpeechRate);
+      updateSpeedUI();
+    });
+  }
+
   // 3. LOAD CONFIG & SCENARIOS
   async function loadConfig() {
     try {
@@ -651,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         if (!sharedAudio) sharedAudio = new Audio();
         sharedAudio.src = audioDataUrl;
+        sharedAudio.playbackRate = currentSpeechRate;
         sharedAudio.onended = resetButton;
         sharedAudio.onerror = () => {
           fallbackWebSpeech(text, lang, resetButton);
@@ -688,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         if (!sharedAudio) sharedAudio = new Audio();
         sharedAudio.src = fetchedAudioUrl;
+        sharedAudio.playbackRate = currentSpeechRate;
         sharedAudio.onended = resetButton;
         sharedAudio.onerror = () => {
           fallbackWebSpeech(text, lang, resetButton);
@@ -714,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cleanText = text.replace(/[\(\)\[\]（）\*]/g, ' ').trim();
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = lang === 'zh' ? 'zh-CN' : 'en-US';
-      utterance.rate = 0.95;
+      utterance.rate = currentSpeechRate;
 
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length > 0) {
@@ -1053,6 +1113,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const geminiModel = selectModel ? selectModel.value : 'gemini-3.5-flash-lite';
     const voiceEn = selectVoiceEn.value;
     const voiceZh = selectVoiceZh.value;
+
+    if (selectSpeechRate) {
+      currentSpeechRate = parseFloat(selectSpeechRate.value) || 1.0;
+      localStorage.setItem('speechRate', currentSpeechRate);
+      updateSpeedUI();
+    }
 
     try {
       const res = await fetch('/api/config', {

@@ -56,6 +56,9 @@
         <button class="toggle-pill active" id="toggle-translation" title="Bật/Tắt Bản Dịch">
           <span class="toggle-icon">🌐</span> Dịch
         </button>
+        <button class="toggle-pill active" id="toggle-speed" title="Tốc độ đọc: 1.0x (Chuẩn) / 0.8x (Chậm) / 1.2x (Nhanh)">
+          <span class="toggle-icon">⚡</span> 1.0x
+        </button>
         <button class="btn-change-scenario" id="btn-show-scenarios">Đổi Tình Huống ▾</button>
       </div>
     </div>
@@ -143,6 +146,15 @@
         <div class="form-item">
           <label>Giọng Đọc Tiếng Trung:</label>
           <select id="select-voice-zh" class="custom-select"></select>
+        </div>
+
+        <div class="form-item">
+          <label>Tốc Độ Đọc Mặc Định:</label>
+          <select id="select-speech-rate" class="custom-select">
+            <option value="0.8">🐢 0.8x — Chậm (Nghe rõ phát âm, thanh điệu)</option>
+            <option value="1.0" selected>⚡ 1.0x — Chuẩn bản ngữ (Mặc định)</option>
+            <option value="1.2">🐇 1.2x — Nhanh (Luyện phản xạ giao tiếp)</option>
+          </select>
         </div>
 
         <button class="btn-save-settings" id="btn-save-settings">Lưu Cài Đặt</button>
@@ -307,6 +319,6 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=3.8"></script>
+  <script src="/static/js/app.js?v=3.9"></script>
 </body>
 </html>
