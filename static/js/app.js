@@ -1040,6 +1040,39 @@ document.addEventListener('DOMContentLoaded', () => {
     modalScenarios.style.display = 'none';
   });
 
+    // CHẾ ĐỘ ẨN CÀI ĐẶT: Mở bí mật bằng 3-chạm logo, Ctrl+Shift+S hoặc ?settings=1
+  const brandHeader = document.querySelector('.brand');
+  let brandTapCount = 0;
+  let brandTapTimer = null;
+  if (brandHeader) {
+    brandHeader.style.cursor = 'pointer';
+    brandHeader.title = "Gia Sư Ngoại Ngữ Free • by ThanhBooks";
+    brandHeader.addEventListener('click', () => {
+      brandTapCount++;
+      if (brandTapTimer) clearTimeout(brandTapTimer);
+      brandTapTimer = setTimeout(() => {
+        brandTapCount = 0;
+      }, 600);
+
+      if (brandTapCount >= 3) {
+        brandTapCount = 0;
+        modalSettings.style.display = 'flex';
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) {
+      e.preventDefault();
+      modalSettings.style.display = 'flex';
+    }
+  });
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('settings') === '1' || urlParams.get('admin') === '1') {
+    modalSettings.style.display = 'flex';
+  }
+
   btnOpenSettings.addEventListener('click', () => {
     modalSettings.style.display = 'flex';
   });
