@@ -293,6 +293,14 @@ def call_gemini_api(api_key: str, history: list, system_instruction: str = "", p
         role = "user" if item.get("role") == "user" else "model"
         contents.append({"role": role, "parts": [{"text": item.get("content", "")}]})
 
+    # Đảm bảo cấu trúc hợp lệ theo chuẩn Google Gemini API
+    if not contents:
+        contents.append({"role": "user", "parts": [{"text": "Hello, please assist me."}]})
+    elif contents[0]["role"] == "model":
+        contents.insert(0, {"role": "user", "parts": [{"text": "Hello, let's start the session."}]})
+    if contents[-1]["role"] == "model":
+        contents.append({"role": "user", "parts": [{"text": "Please provide your response in the requested JSON format."}]})
+
     payload = {
         "contents": contents,
         "generationConfig": {
@@ -395,30 +403,42 @@ def generate_fresh_suggestions(api_key: str, lang: str, scenario_id: str, histor
     scenario_title = scenario_info.get("title", "") if scenario_info else scenario_id
     bot_role = scenario_info.get("botRole", "Đối tác") if scenario_info else "Đối tác"
 
-    if api_key and history:
+    last_bot_msg = ""
+    for item in reversed(history or []):
+        if item.get("role") in ["assistant", "model"]:
+            last_bot_msg = item.get("content", "").strip()
+            break
+    if not last_bot_msg and scenario_info:
+        last_bot_msg = scenario_info.get("initialHanzi" if lang == "zh" else "initialMessage", "")
+
+    if api_key:
         try:
             if lang == "zh":
-                prompt = f"""Bạn là gia sư AI dạy tiếng Trung trong tình huống: {scenario_title} (bạn đóng vai {bot_role}).
-Dựa vào tin nhắn gần nhất trong đoạn hội thoại, hãy tạo 3 câu gợi ý trả lời HOÀN TOÀN MỚI, KHÁC BIỆT và KHỚP 100% VỚI NGỮ CẢNH để người học nói tiếp.
-Mỗi câu gợi ý có dạng: "Chữ Hán (Pinyin - Nghĩa tiếng Việt)".
-Xuất JSON dạng: {{"suggested_replies": ["...", "...", "..."]}}"""
-            else:
-                prompt = f"""You are an English language coach in the scenario: {scenario_title} (playing as {bot_role}).
-Based on the latest message in this conversation, provide 3 completely fresh, natural alternative responses the learner can say next.
-Keep suggestions strictly aligned to the current dialogue context.
-Output JSON: {{"suggested_replies": ["...", "...", "..."]}}"""
+                prompt_text = f"""Tình huống giao tiếp: {scenario_title} (bạn đang đóng vai: {bot_role}).
+Câu nói gần nhất của bạn: "{last_bot_msg}"
 
-            raw = call_gemini_api(api_key, history, prompt, preferred_model=preferred_model)
-            parsed = json.loads(raw)
+YÊU CẦU:
+Hãy tạo 3 câu gợi ý phản hồi HOÀN TOÀN MỚI, KHÁC BIỆT, tự nhiên để người học trả lời lại câu trên (không trùng với các gợi ý trước).
+Mỗi câu có dạng: "Chữ Hán (Pinyin - Nghĩa tiếng Việt)".
+Xuất duy nhất định dạng JSON: {{"suggested_replies": ["...", "...", "..."]}}"""
+            else:
+                prompt_text = f"""Roleplay scenario: {scenario_title} (your role: {bot_role}).
+Your latest statement to the user: "{last_bot_msg}"
+
+TASK:
+Provide 3 completely FRESH, DIVERSE, and natural alternative responses the learner can say next to your statement.
+Output strictly JSON format: {{"suggested_replies": ["...", "...", "..."]}}"""
+
+            single_turn_history = [{"role": "user", "content": prompt_text}]
+            raw_res = call_gemini_api(api_key, single_turn_history, preferred_model=preferred_model)
+            parsed = json.loads(raw_res)
             if "suggested_replies" in parsed and isinstance(parsed["suggested_replies"], list) and len(parsed["suggested_replies"]) > 0:
                 return parsed["suggested_replies"]
         except Exception as e:
             logger.warning(f"Không thể tạo gợi ý mới qua Gemini: {e}")
 
-    # Fallback to scenario initialSuggestions or dynamic response
-    if scenario_info and scenario_info.get("initialSuggestions"):
-        return scenario_info["initialSuggestions"]
-    offline = get_dynamic_offline_response("gợi ý", lang, scenario_id, 1)
+    # Fallback ngoại tuyến ngẫu nhiên nếu offline hoặc lỗi mạng
+    offline = get_dynamic_offline_response("đổi gợi ý", lang, scenario_id, random.randint(1, 10))
     return offline.get("suggested_replies", [])
 
 # ==============================================================================

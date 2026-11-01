@@ -456,6 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRefreshSuggestions.addEventListener('click', async () => {
       try {
         btnRefreshSuggestions.textContent = '⏳ Đang đổi...';
+        btnRefreshSuggestions.style.opacity = '0.6';
+        btnRefreshSuggestions.disabled = true;
+
         const res = await fetch('/api/suggestions/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -469,11 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (data.success && data.suggestions && data.suggestions.length > 0) {
           renderSuggestions(data.suggestions);
+          suggestionsList.scrollLeft = 0;
         }
       } catch (err) {
         console.warn('Lỗi đổi gợi ý:', err);
       } finally {
         btnRefreshSuggestions.textContent = '🔄 Đổi gợi ý khác';
+        btnRefreshSuggestions.style.opacity = '1';
+        btnRefreshSuggestions.disabled = false;
       }
     });
   }
