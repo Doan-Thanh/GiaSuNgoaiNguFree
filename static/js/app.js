@@ -354,8 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display:flex; align-items:flex-start;">
           <button class="speaker-btn" data-speak="${escapeHtml(speakText)}">🔊</button>
           <div style="flex:1;">
-            ${data.reply_pinyin ? `<span class="pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(data.reply_pinyin)}</span>` : ''}
             <span class="hanzi-text">${escapeHtml(data.reply_hanzi)}</span>
+            ${data.reply_pinyin ? `<span class="pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(data.reply_pinyin)}</span>` : ''}
             ${data.translation_vi ? `<span class="translation-text" style="display:${showTranslation ? 'block' : 'none'};">${escapeHtml(data.translation_vi)}</span>` : ''}
           </div>
         </div>
@@ -402,6 +402,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function parseSuggestionItem(item, lang) {
+    if (!item) return { main: '', pinyin: '', trans: '', cleanMsg: '' };
+
+    if (lang !== 'zh') {
+      let main = item;
+      let trans = '';
+      const match = item.match(/^(.*?)\s*[\(（](.*?)[\)）]\s*$/);
+      if (match) {
+        main = match[1].trim();
+        trans = match[2].trim();
+      }
+      return { main, pinyin: '', trans, cleanMsg: main };
+    }
+
+    let main = item;
+    let pinyin = '';
+    let trans = '';
+
+    const match = item.match(/^(.*?)\s*[\(（](.*?)[\)）]\s*$/);
+    if (match) {
+      main = match[1].trim();
+      const inside = match[2].trim();
+      if (inside.includes(' - ')) {
+        const parts = inside.split(' - ');
+        pinyin = parts[0].trim();
+        trans = parts.slice(1).join(' - ').trim();
+      } else if (inside.includes('-')) {
+        const parts = inside.split('-');
+        pinyin = parts[0].trim();
+        trans = parts.slice(1).join('-').trim();
+      } else {
+        pinyin = inside;
+      }
+    } else {
+      if (item.includes(' - ')) {
+        const parts = item.split(' - ');
+        main = parts[0].trim();
+        trans = parts.slice(1).join(' - ').trim();
+      }
+    }
+
+    return { main, pinyin, trans, cleanMsg: main };
+  }
+
   function renderSuggestions(suggestions) {
     if (!suggestions || suggestions.length === 0) {
       suggestionsContainer.style.display = 'none';
@@ -409,41 +453,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     suggestionsList.innerHTML = '';
+    suggestionsList.scrollLeft = 0;
+
     suggestions.forEach(item => {
-      let cleanMsg = item;
-      // Xử lý cả dấu ngoặc đơn nửa góc '(' và dấu ngoặc đơn toàn góc '（' của tiếng Trung
-      if (cleanMsg.includes('（')) {
-        cleanMsg = cleanMsg.split('（')[0].trim();
-      }
-      if (cleanMsg.includes('(')) {
-        cleanMsg = cleanMsg.split('(')[0].trim();
-      }
+      const parsed = parseSuggestionItem(item, currentLang);
 
       const chip = document.createElement('div');
       chip.className = 'suggestion-chip';
-      chip.style.display = 'inline-flex';
-      chip.style.alignItems = 'center';
-      chip.style.gap = '6px';
 
-      chip.innerHTML = `
-        <span class="chip-speaker-btn" title="Nghe giọng đọc mẫu câu này" style="cursor:pointer; font-size:1.15rem; opacity:0.9; padding:2px 6px; border-radius:4px; transition:opacity 0.2s;">🔊</span>
-        <span class="chip-text" title="Bấm để gửi ngay" style="cursor:pointer; font-size:1.02rem; font-weight:500; letter-spacing:0.2px;">${escapeHtml(item)}</span>
+      let innerHtml = `
+        <div class="chip-header-row">
+          <span class="chip-speaker-btn" title="Nghe phát âm mẫu">🔊</span>
+          <span class="chip-main-text">${escapeHtml(parsed.main)}</span>
+        </div>
       `;
 
-      // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu để luyện đọc theo
-      const speakerBtn = chip.querySelector('.chip-speaker-btn');
-      speakerBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        speakerBtn.style.opacity = '1';
-        speakerBtn.textContent = '⏳';
-        playTTSAudio(cleanMsg, currentLang).finally(() => {
-          speakerBtn.textContent = '🔊';
-        });
-      });
+      if (parsed.pinyin) {
+        innerHtml += `<div class="chip-pinyin-row pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(parsed.pinyin)}</div>`;
+      }
 
-      // Bấm vào phần chữ -> gửi tin nhắn
-      chip.querySelector('.chip-text').addEventListener('click', () => {
-        sendUserMessage(cleanMsg);
+      if (parsed.trans) {
+        innerHtml += `<div class="chip-trans-row translation-text" style="display:${showTranslation ? 'block' : 'none'};">${escapeHtml(parsed.trans)}</div>`;
+      }
+
+      chip.innerHTML = innerHtml;
+
+      // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu
+      const speakerBtn = chip.querySelector('.chip-speaker-btn');
+      if (speakerBtn) {
+        speakerBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          speakerBtn.style.opacity = '1';
+          speakerBtn.textContent = '⏳';
+          playTTSAudio(parsed.cleanMsg, currentLang).finally(() => {
+            speakerBtn.textContent = '🔊';
+          });
+        });
+      }
+
+      // Bấm vào thân thẻ -> gửi tin nhắn
+      chip.addEventListener('click', () => {
+        sendUserMessage(parsed.cleanMsg);
       });
 
       suggestionsList.appendChild(chip);
