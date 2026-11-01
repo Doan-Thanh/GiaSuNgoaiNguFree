@@ -304,6 +304,10 @@ document.addEventListener('DOMContentLoaded', () => {
     chatHistory = [];
     turnCount = 0;
 
+    const initialSuggestions = (scenario.initialSuggestions && scenario.initialSuggestions.length > 0)
+      ? scenario.initialSuggestions
+      : [];
+
     // Lời mở đầu của AI
     if (currentLang === 'zh') {
       const initialText = scenario.initialHanzi;
@@ -313,11 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reply_pinyin: scenario.initialPinyin,
         translation_vi: scenario.initialTranslation,
         feedback: "Bấm vào biểu tượng loa 🔊 để nghe phát âm mẫu, hoặc bấm vào các câu gợi ý phía dưới để bắt đầu nói!",
-        suggested_replies: [
-          "老板，这个多少钱？能便宜点吗？ (Lǎobǎn, zhège duōshao qián? Néng piányi diǎn ma? - Ông chủ, cái này bao nhiêu tiền? Bớt được không?)",
-          "这款有没有白色的现货？我想试穿一下 (Zhè kuǎn yǒu méiyǒu báisè de xiànhuò? Wǒ xiǎng shìchuān yíxià - Mẫu này có sẵn màu trắng không? Em muốn thử)",
-          "我先随便看看，挑中了再叫你 (Wǒ xiān suíbiàn kànkan, tiāozhòng le zài jiào nǐ - Em xem qua chút đã, chọn được sẽ gọi anh)"
-        ]
+        suggested_replies: initialSuggestions
       });
       playTTSAudio(scenario.initialHanzi, 'zh');
     } else {
@@ -327,11 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reply: scenario.initialMessage,
         translation_vi: scenario.initialTranslation,
         feedback: "Welcome! Tap the speaker 🔊 to hear native pronunciation, or tap any suggestion chip below to reply!",
-        suggested_replies: [
-          "Could I get a hot cappuccino with oat milk, please?",
-          "What kind of signature drinks do you recommend here?",
-          "Just looking around for now, thank you!"
-        ]
+        suggested_replies: initialSuggestions
       });
       playTTSAudio(scenario.initialMessage, 'en');
     }
@@ -466,11 +462,12 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({
             lang: currentLang,
             scenarioId: currentScenario ? currentScenario.id : '',
-            turnCount: turnCount
+            turnCount: turnCount,
+            history: chatHistory.slice(-4)
           })
         });
         const data = await res.json();
-        if (data.success && data.suggestions) {
+        if (data.success && data.suggestions && data.suggestions.length > 0) {
           renderSuggestions(data.suggestions);
         }
       } catch (err) {
@@ -567,6 +564,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 5. MODAL EVENT HANDLERS
+  if (currentScenarioTitle) {
+    currentScenarioTitle.style.cursor = 'pointer';
+    currentScenarioTitle.title = 'Bấm vào đây để chọn tình huống khác';
+    currentScenarioTitle.addEventListener('click', () => {
+      modalScenarios.style.display = 'flex';
+    });
+  }
   btnShowScenarios.addEventListener('click', () => {
     modalScenarios.style.display = 'flex';
   });

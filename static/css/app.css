@@ -154,7 +154,21 @@ body.mobile-app-body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 190px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scenario-pill:hover {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.45);
 }
 
 .helper-toggles {

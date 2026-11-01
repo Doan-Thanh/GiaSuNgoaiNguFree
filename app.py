@@ -12,7 +12,7 @@ import uvicorn
 
 from engine.port_finder import find_safe_port
 from engine.tts_engine import generate_speech_base64, VOICE_OPTIONS, DEFAULT_VOICES
-from engine.ai_tutor import SCENARIOS, process_tutor_chat, get_dynamic_offline_response
+from engine.ai_tutor import SCENARIOS, process_tutor_chat, get_dynamic_offline_response, generate_fresh_suggestions
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ThanhBooksAI")
@@ -138,12 +138,20 @@ async def handle_chat(payload: dict = Body(...)):
 async def refresh_suggestions(payload: dict = Body(...)):
     lang = payload.get("lang", "en")
     scenario_id = payload.get("scenarioId", "cafe" if lang == "en" else "taobao")
-    turn_count = payload.get("turnCount", 1)
-    
-    # Sinh ngẫu nhiên nhóm gợi ý khác phù hợp ngữ cảnh
-    dummy_text = "thay đổi gợi ý"
-    res = get_dynamic_offline_response(dummy_text, lang, scenario_id, turn_count)
-    return {"success": True, "suggestions": res.get("suggested_replies", [])}
+    history = payload.get("history", [])
+
+    cfg = load_config()
+    api_key = cfg.get("geminiApiKey", "").strip()
+    preferred_model = cfg.get("geminiModel", "gemini-3.5-flash-lite")
+
+    suggestions = generate_fresh_suggestions(
+        api_key=api_key,
+        lang=lang,
+        scenario_id=scenario_id,
+        history=history,
+        preferred_model=preferred_model
+    )
+    return {"success": True, "suggestions": suggestions}
 
 @app.post("/api/tts")
 async def text_to_speech(payload: dict = Body(...)):
