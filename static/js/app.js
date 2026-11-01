@@ -36,8 +36,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const modalDonate = document.getElementById('modal-donate');
   const btnOpenDonate = document.getElementById('btn-open-donate');
+  const btnOpenShare = document.getElementById('btn-open-share');
   const btnCloseDonate = document.getElementById('btn-close-donate');
   const btnDoneDonate = document.getElementById('btn-done-donate');
+  const btnShareFb = document.getElementById('btn-share-fb');
+  const btnShareZalo = document.getElementById('btn-share-zalo');
+  const btnShareTelegram = document.getElementById('btn-share-telegram');
+  const btnShareCopy = document.getElementById('btn-share-copy');
+  const btnShareNative = document.getElementById('btn-share-native');
+  const btnCopyAcc = document.getElementById('btn-copy-acc');
+  const btnCopyContent = document.getElementById('btn-copy-content');
   const inputApiKey = document.getElementById('input-api-key');
   const selectModel = document.getElementById('select-model');
   const selectVoiceEn = document.getElementById('select-voice-en');
@@ -646,6 +654,11 @@ document.addEventListener('DOMContentLoaded', () => {
       modalDonate.style.display = 'flex';
     });
   }
+  if (btnOpenShare) {
+    btnOpenShare.addEventListener('click', () => {
+      modalDonate.style.display = 'flex';
+    });
+  }
   if (btnCloseDonate) {
     btnCloseDonate.addEventListener('click', () => {
       modalDonate.style.display = 'none';
@@ -654,6 +667,114 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnDoneDonate) {
     btnDoneDonate.addEventListener('click', () => {
       modalDonate.style.display = 'none';
+    });
+  }
+
+  // --- SOCIAL SHARE & DONATE LOGIC ---
+  function getAppShareUrl() {
+    return (window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http'))
+      ? window.location.origin + '/'
+      : 'https://giasungoaingufree.onrender.com/';
+  }
+
+  function showToast(message) {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      toast.className = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.classList.remove('show');
+    }, 2500);
+  }
+
+  function copyToClipboard(text, successMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMsg);
+      }).catch(() => {
+        fallbackCopy(text, successMsg);
+      });
+    } else {
+      fallbackCopy(text, successMsg);
+    }
+  }
+
+  function fallbackCopy(text, successMsg) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(successMsg);
+    } catch (e) {
+      showToast('⚠️ Không thể sao chép tự động!');
+    }
+  }
+
+  if (btnShareFb) {
+    btnShareFb.addEventListener('click', () => {
+      const url = encodeURIComponent(getAppShareUrl());
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  if (btnShareZalo) {
+    btnShareZalo.addEventListener('click', () => {
+      const url = encodeURIComponent(getAppShareUrl());
+      window.open(`https://sp.zalo.me/plugins/share?url=${url}`, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  if (btnShareTelegram) {
+    btnShareTelegram.addEventListener('click', () => {
+      const url = encodeURIComponent(getAppShareUrl());
+      const text = encodeURIComponent('Gia Sư Ngoại Ngữ Free — Luyện nói Tiếng Anh & Tiếng Trung 1-kèm-1 cùng AI miễn phí!');
+      window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank', 'noopener,noreferrer');
+    });
+  }
+
+  if (btnShareCopy) {
+    btnShareCopy.addEventListener('click', () => {
+      copyToClipboard(getAppShareUrl(), '📋 Đã sao chép liên kết web!');
+    });
+  }
+
+  if (btnShareNative && navigator.share) {
+    btnShareNative.style.display = 'inline-flex';
+    btnShareNative.addEventListener('click', async () => {
+      try {
+        await navigator.share({
+          title: 'Gia Sư Ngoại Ngữ Free',
+          text: 'Luyện nói Tiếng Anh & Tiếng Trung 1-kèm-1 cùng AI miễn phí, không cần cài đặt!',
+          url: getAppShareUrl()
+        });
+      } catch (e) {
+        // User cancelled share
+      }
+    });
+  }
+
+  if (btnCopyAcc) {
+    btnCopyAcc.addEventListener('click', () => {
+      const acc = document.getElementById('donate-acc')?.textContent?.trim() || '8335897';
+      copyToClipboard(acc, '💳 Đã sao chép STK: ' + acc);
+    });
+  }
+
+  if (btnCopyContent) {
+    btnCopyContent.addEventListener('click', () => {
+      const content = document.getElementById('donate-content')?.textContent?.trim() || 'Thanhbooks - Cafe ung ho';
+      copyToClipboard(content, '💬 Đã sao chép nội dung CK!');
     });
   }
 

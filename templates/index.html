@@ -11,7 +11,7 @@
   <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
   <link rel="icon" type="image/png" href="/static/img/app-icon.png">
   <link rel="manifest" href="/static/manifest.json">
-  <link rel="stylesheet" href="/static/css/app.css?v=2.5">
+  <link rel="stylesheet" href="/static/css/app.css?v=2.6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -39,7 +39,8 @@
       </div>
 
       <div style="display:flex; align-items:center; gap:6px;">
-        <button class="btn-icon" id="btn-open-donate" title="Mời tác giả 1 ly cà phê ☕" style="font-size:1.15rem; background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.35);">☕</button>
+        <button class="btn-icon" id="btn-open-donate" title="Về dự án & Mời cà phê ☕" style="font-size:1.15rem; background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.35); border-radius:8px;">☕</button>
+        <button class="btn-icon" id="btn-open-share" title="Chia sẻ ứng dụng" style="font-size:1.05rem; background:rgba(59, 130, 246, 0.15); border:1px solid rgba(59, 130, 246, 0.35); border-radius:8px;">📤</button>
         <button class="btn-icon" id="btn-open-settings" title="Cài đặt">⚙️</button>
       </div>
     </header>
@@ -150,37 +151,89 @@
     </div>
   </div>
 
-  <!-- MODAL: MỜI CÀ PHÊ TÁC GIẢ -->
+  <!-- MODAL: VỀ DỰ ÁN & LAN TỎA / ĐỒNG HÀNH -->
   <div class="modal-backdrop" id="modal-donate" style="display:none;">
-    <div class="modal-sheet" style="text-align: center; max-width: 420px;">
+    <div class="modal-sheet" style="max-width: 440px;">
       <div class="modal-header">
-        <h3>☕ Mời Tác Giả 1 Ly Cà Phê</h3>
+        <h3 style="display:flex; align-items:center; gap:8px;">❤️ Về Dự Án & Đồng Hành</h3>
         <button class="btn-close-modal" id="btn-close-donate">✕</button>
       </div>
-      <div class="settings-content" style="padding: 18px 8px;">
-        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
-          Ứng dụng <b>Gia Sư Ngoại Ngữ Free</b> được phát triển bởi <b>ThanhBooks (Đoàn Đức Thanh)</b> và chia sẻ hoàn toàn phi lợi nhuận. Nếu ứng dụng này giúp ích cho bạn trong việc luyện nói Tiếng Anh & Tiếng Trung mỗi ngày, hãy tặng tác giả một ly cà phê ấm lòng nhé! ❤️
-        </p>
-
-        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 16px;">
-          <div style="font-size: 2.2rem; margin-bottom: 6px;">☕✨</div>
-          <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Quét mã QR chuyển khoản ủng hộ</div>
-          
-          <img src="/static/img/qr_donate.png" id="qr-donate-img" onerror="this.style.display='none';" style="max-width: 210px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); margin: 0 auto; display: block;" alt="Mã QR Donate">
-          
-          <div id="qr-fallback-info" style="text-align: left; background: rgba(0,0,0,0.3); padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.8; margin-top: 14px;">
-            <div>🏦 <b>Ngân hàng:</b> <span id="donate-bank">ACB (Ngân hàng Á Châu)</span></div>
-            <div>💳 <b>Số tài khoản:</b> <b style="color:#38bdf8; font-size:1.05rem;" id="donate-acc">8335897</b></div>
-            <div>👤 <b>Chủ tài khoản:</b> <span id="donate-name">DOAN DUC THANH</span></div>
-            <div>💬 <b>Nội dung:</b> <code>Thanhbooks - Cafe ung ho</code></div>
+      <div class="settings-content" style="padding: 10px 4px 18px;">
+        
+        <!-- LỜI NGỎ TÁC GIẢ -->
+        <div class="about-author-box">
+          <div class="about-author-header">
+            <span class="about-author-badge">👨‍💻 Lời ngỏ từ người phát triển</span>
+          </div>
+          <p class="about-p">
+            Ứng dụng này ra đời từ niềm đam mê học hỏi công nghệ và mong muốn chia sẻ một công cụ luyện nói ngoại ngữ nho nhỏ, <b>hoàn toàn miễn phí</b> cho cộng đồng.
+          </p>
+          <p class="about-p">
+            Đây là dự án cá nhân <b>phi lợi nhuận, mã nguồn mở công khai</b>, nên khó tránh khỏi những điểm chưa hoàn thiện. Mình rất trân trọng mọi góp ý chân thành từ bạn để hoàn thiện hơn mỗi ngày.
+          </p>
+          <div class="author-sig">
+            <span>— Thân gửi từ <b>ThanhBooks (Đoàn Đức Thanh)</b></span>
+            <a href="https://github.com/Doan-Thanh/GiaSuNgoaiNguFree" target="_blank" rel="noopener noreferrer" class="github-badge-link" title="Xem mã nguồn mở trên GitHub">
+              <svg height="13" width="13" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle; margin-right:4px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+              GitHub Open Source ↗
+            </a>
           </div>
         </div>
 
-        <button class="btn-save-settings" id="btn-done-donate" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff;">Cảm Ơn Bạn Rất Nhiều! 🙏</button>
+        <!-- MỤC 1: LAN TỎA / CHIA SẺ MẠNG XÃ HỘI -->
+        <div class="share-section">
+          <div class="share-section-title">
+            <span>📢 Lan tỏa cùng bạn bè (Miễn phí):</span>
+          </div>
+          <div class="share-btn-grid">
+            <button class="share-btn share-btn-fb" id="btn-share-fb" title="Chia sẻ lên Facebook">
+              <span>💙</span> Facebook
+            </button>
+            <button class="share-btn share-btn-zalo" id="btn-share-zalo" title="Chia sẻ qua Zalo">
+              <span>💬</span> Zalo
+            </button>
+            <button class="share-btn share-btn-telegram" id="btn-share-telegram" title="Chia sẻ qua Telegram">
+              <span>✈️</span> Telegram
+            </button>
+            <button class="share-btn share-btn-copy" id="btn-share-copy" title="Sao chép liên kết web">
+              <span>📋</span> Sao chép link
+            </button>
+            <button class="share-btn share-btn-native" id="btn-share-native" title="Mở khay chia sẻ điện thoại" style="display:none;">
+              <span>📤</span> Chia sẻ qua ứng dụng khác...
+            </button>
+          </div>
+        </div>
+
+        <!-- MỤC 2: MỜI CÀ PHÊ TÁC GIẢ -->
+        <div class="donate-section">
+          <div class="donate-section-title">
+            <span>☕ Mời tác giả 1 ly cà phê (Ủng hộ tinh thần):</span>
+          </div>
+          <p class="donate-hint">
+            Nếu ứng dụng mang lại chút hữu ích cho bạn, bạn có thể mời mình một ly cà phê ấm lòng để tiếp thêm niềm vui thức đêm hoàn thiện nhé!
+          </p>
+
+          <img src="/static/img/qr_donate.png" id="qr-donate-img" onerror="this.style.display='none';" style="max-width: 200px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); margin: 10px auto; display: block;" alt="Mã QR Donate">
+          
+          <div id="qr-fallback-info" class="donate-bank-box">
+            <div>🏦 <b>Ngân hàng:</b> <span id="donate-bank">ACB (Ngân hàng Á Châu)</span></div>
+            <div>
+              💳 <b>Số tài khoản:</b> <b style="color:#38bdf8; font-size:1.05rem;" id="donate-acc">8335897</b>
+              <button class="donate-copy-btn" id="btn-copy-acc" title="Sao chép số tài khoản">Sao chép</button>
+            </div>
+            <div>👤 <b>Chủ tài khoản:</b> <span id="donate-name">DOAN DUC THANH</span></div>
+            <div>
+              💬 <b>Nội dung:</b> <code id="donate-content">Thanhbooks - Cafe ung ho</code>
+              <button class="donate-copy-btn" id="btn-copy-content" title="Sao chép nội dung chuyển khoản">Sao chép</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-save-settings" id="btn-done-donate" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; margin-top: 14px;">Cảm Ơn Bạn Rất Nhiều! 🙏</button>
       </div>
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=2.5"></script>
+  <script src="/static/js/app.js?v=2.6"></script>
 </body>
 </html>
