@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentLang = appConfig.currentLang || 'en';
       updateLangUI();
-      renderTopicHub();
+      startTopicConversation('free', false);
     } catch (err) {
       console.error('Lỗi tải cấu hình:', err);
     }
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentLang = targetLang;
       updateLangUI();
-      renderTopicHub();
+      startTopicConversation('free', false);
       fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -339,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   const TOPIC_PRESETS = {
     en: [
+      { id: "free", icon: "💬", title: "Casual Daily Talk", sub: "Trò chuyện tự do mọi điều (Mặc định)", isDefault: true },
       { id: "cafe", icon: "☕", title: "Café & Hanging Out", sub: "Quán cà phê, đồ uống, tán gẫu" },
       { id: "food", icon: "🍕", title: "Food & Cooking", sub: "Món ăn ngon, ẩm thực, nấu nướng" },
       { id: "travel", icon: "✈️", title: "Travel & Vacations", sub: "Du lịch, khám phá, đi biển" },
@@ -352,10 +353,10 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: "money", icon: "💰", title: "Money & Spending", sub: "Tiền bạc, chi tiêu, tiết kiệm" },
       { id: "books", icon: "📚", title: "Books & Self-Growth", sub: "Đọc sách, học tập, phát triển" },
       { id: "commute", icon: "🚗", title: "Traffic & Commute", sub: "Xe cộ, đường phố, đi lại" },
-      { id: "weekend", icon: "🏖️", title: "Weekend Plans", sub: "Kế hoạch cuối tuần, xả stress" },
-      { id: "free", icon: "💬", title: "Casual Daily Talk", sub: "Trò chuyện tự do mọi điều" }
+      { id: "weekend", icon: "🏖️", title: "Weekend Plans", sub: "Kế hoạch cuối tuần, xả stress" }
     ],
     zh: [
+      { id: "free", icon: "💬", title: "随心日常闲聊", sub: "Trò chuyện tự do mọi điều (Mặc định)", isDefault: true },
       { id: "cafe", icon: "☕", title: "喝咖啡与探店", sub: "Quán cà phê, hẹn hò, đồ uống" },
       { id: "food", icon: "🍕", title: "美食与烹饪", sub: "Ẩm thực Trung - Việt, nấu nướng" },
       { id: "travel", icon: "✈️", title: "旅游与度假", sub: "Du lịch ngắm cảnh, đi chơi xa" },
@@ -369,12 +370,11 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: "money", icon: "💰", title: "消费与理财", sub: "Chi tiêu, tiền bạc, tiết kiệm" },
       { id: "books", icon: "📚", title: "学习与阅读", sub: "Đọc sách, học tiếng Trung, tiến bộ" },
       { id: "commute", icon: "🚗", title: "交通与出行", sub: "Tàu điện ngầm, xe cộ, đi lại" },
-      { id: "weekend", icon: "🏖️", title: "周末去哪儿", sub: "Kế hoạch cuối tuần, xả hơi" },
-      { id: "free", icon: "💬", title: "随心日常闲聊", sub: "Tán gẫu tự do mọi chủ đề" }
+      { id: "weekend", icon: "🏖️", title: "周末去哪儿", sub: "Kế hoạch cuối tuần, xả hơi" }
     ]
   };
 
-  let currentTopic = "";
+  let currentTopic = "free";
 
   function renderTopicHub() {
     stopAllSpeech();
@@ -402,9 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="topic-chips-grid">
           ${topics.map(t => `
-            <div class="topic-chip-item" data-topic="${escapeHtml(t.title)}">
-              <span class="topic-chip-title">${t.icon} ${escapeHtml(t.title)}</span>
-              <span class="topic-chip-sub">${escapeHtml(t.sub)}</span>
+            <div class="topic-chip-item ${t.isDefault ? 'topic-chip-default' : ''}" data-topic="${t.id === 'free' ? 'free' : escapeHtml(t.title)}">
+              <span class="topic-chip-icon">${t.icon}</span>
+              <div class="topic-chip-info">
+                <span class="topic-chip-title">${escapeHtml(t.title)} ${t.isDefault ? '<span class="default-badge">⭐ Mặc định</span>' : ''}</span>
+                <span class="topic-chip-sub">${escapeHtml(t.sub)}</span>
+              </div>
             </div>
           `).join('')}
         </div>
@@ -415,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chips.forEach(chip => {
       chip.addEventListener('click', () => {
         const selectedTopic = chip.getAttribute('data-topic');
-        startTopicConversation(selectedTopic);
+        startTopicConversation(selectedTopic, true);
       });
     });
 
@@ -425,9 +428,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const handleCustom = () => {
         const val = inputCustom.value.trim();
         if (val) {
-          startTopicConversation(val);
+          startTopicConversation(val, true);
         } else {
-          startTopicConversation(isZh ? '随心日常闲聊' : 'Casual Daily Talk');
+          startTopicConversation('free', true);
         }
       };
       btnCustom.addEventListener('click', handleCustom);
@@ -437,16 +440,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function startTopicConversation(topicName) {
-    currentTopic = topicName;
-    currentScenarioTitle.textContent = `🎯 ${topicName.split('(')[0].trim()}`;
+  async function startTopicConversation(topicName, autoPlay = true) {
+    const isFree = !topicName || topicName === 'free' || topicName.toLowerCase().includes('free') || topicName.toLowerCase().includes('tự do') || topicName.toLowerCase().includes('casual') || topicName.toLowerCase().includes('闲聊');
+
+    currentTopic = isFree ? 'free' : topicName;
+    if (isFree) {
+      currentScenarioTitle.textContent = currentLang === 'zh'
+        ? "🎯 Trò Chuyện Tự Do (日常闲聊)"
+        : "🎯 Trò Chuyện Tự Do (Casual Talk)";
+    } else {
+      currentScenarioTitle.textContent = `🎯 ${topicName.split('(')[0].trim()}`;
+    }
+
     chatHistory = [];
     turnCount = 1;
 
     chatMessages.innerHTML = `
       <div class="msg-row bot" id="temp-topic-loading">
         <div class="msg-bubble" style="opacity: 0.9; font-size: 0.88rem; color: #94a3b8;">
-          ✨ Gia sư AI đang chuẩn bị câu chuyện về <b>"${escapeHtml(topicName)}"</b>...
+          ✨ Gia sư AI đang kết nối cuộc trò chuyện về <b>"${escapeHtml(isFree ? (currentLang === 'zh' ? 'Trò chuyện tự do' : 'Casual Daily Talk') : topicName)}"</b>...
         </div>
       </div>
     `;
@@ -456,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          topic: topicName,
+          topic: isFree ? 'free' : topicName,
           lang: currentLang
         })
       });
@@ -469,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? (data.aiResult.reply_hanzi || '')
           : (data.aiResult.reply || '');
         chatHistory.push({ role: 'assistant', content: botReply });
-        appendBotMessage(data.aiResult, data.audio);
+        appendBotMessage(data.aiResult, data.audio, autoPlay);
       } else {
         alert(data.detail || 'Lỗi khởi tạo chủ đề');
       }
@@ -572,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
   }
 
-  function appendBotMessage(data, audioUrl = null) {
+  function appendBotMessage(data, audioUrl = null, autoPlay = true) {
     const row = document.createElement('div');
     row.className = 'msg-row bot';
 
@@ -627,7 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderSuggestions(data.suggested_replies || []);
     scrollToBottom();
 
-    if (audioUrl) {
+    if (audioUrl && autoPlay) {
       playSpeechWithFallback(speakText, currentLang, audioUrl, speakerBtn);
     }
   }

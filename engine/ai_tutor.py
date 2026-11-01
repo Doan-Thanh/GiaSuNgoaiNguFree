@@ -330,17 +330,20 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
 
 def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3.5-flash-lite") -> dict:
     """Khởi tạo cuộc trò chuyện mở đầu sinh động về bất kỳ chủ đề đàm thoại nào được chọn."""
-    if not topic or not topic.strip():
-        topic = "Trò chuyện tự do"
+    t_clean = (topic or "").strip().lower()
+    if not t_clean or t_clean in ["free", "casual daily talk", "随心日常闲聊", "trò chuyện tự do", "tán gẫu", "tự do"]:
+        topic_display = "日常随心闲聊 (Casual Daily Talk)" if lang == "zh" else "Casual Daily Talk (Trò chuyện tự do)"
+    else:
+        topic_display = topic.strip()
 
     if api_key:
         try:
             if lang == "zh":
                 prompt_text = f"""你是一位热情、幽默的中国母语中文语伴（北京标准口音）。
-用户刚选择了日常口语交流主题：“{topic}”。
+用户刚选择了日常口语交流主题：“{topic_display}”。
 
 任务：
-请自然且简短地开场（1-2句话）。对主题“{topic}”做一个接地气、生动的开场白，并提出一个开放式的好问题引发交流。
+请自然且简短地开场（1-2句话）。对主题“{topic_display}”做一个接地气、生动的开场白，并提出一个开放式的好问题引发交流。
 
 严格输出JSON格式：
 - "reply_hanzi": 中文开场白（简体中文，1-2句话）。
@@ -350,10 +353,10 @@ def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferr
 - "suggested_replies": 3个具体的回复建议，格式严格为："中文句子 (拼音 - 越南语翻译)"。"""
             else:
                 prompt_text = f"""You are an enthusiastic, warm native English conversational tutor.
-The user just selected this daily conversation topic: "{topic}".
+The user just selected this daily conversation topic: "{topic_display}".
 
 TASK:
-Open the conversation naturally and concisely (1-2 sentences). Share a quick relatable remark about "{topic}" and ask an engaging open-ended question to kick off the talk.
+Open the conversation naturally and concisely (1-2 sentences). Share a quick relatable remark about "{topic_display}" and ask an engaging open-ended question to kick off the talk.
 
 Provide strictly valid JSON format:
 - "reply": Your English opening message (1-2 sentences).
@@ -375,7 +378,19 @@ Provide strictly valid JSON format:
 def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
     t = topic.lower()
     if lang == "zh":
-        if any(k in t for k in ["咖啡", "kāfēi", "cafe", "cà phê"]):
+        if any(k in t for k in ["free", "闲聊", "自由", "tự do", "tán gẫu", "casual"]):
+            return {
+                "reply_hanzi": "哈喽！很高兴今天能和你聊天。你今天过得怎么样呀？",
+                "reply_pinyin": "Hālóu! Hěn gāoxìng jīntiān néng hé nǐ liáotiān. Nǐ jīntiān guò de zěnmeyàng ya?",
+                "translation_vi": "Chào bạn! Rất vui hôm nay được trò chuyện cùng bạn. Hôm nay của bạn thế nào rồi?",
+                "feedback": "Cứ trò chuyện tự nhiên như hai người bạn thân nhé!",
+                "suggested_replies": [
+                    "挺好的，今天过得挺充实 (Tǐng hǎo de, jīntiān guò de tǐng chōngshí - Khá tốt, hôm nay của tôi trôi qua rất trọn vẹn)",
+                    "今天有点忙，不过心情还不错 (Jīntiān yǒudiǎn máng, búguò xīanqíng hái búcuò - Hôm nay hơi bận một chút, nhưng tâm trạng vẫn rất tốt)",
+                    "一切正常，正想找个人聊聊天呢 (Yíqiè zhèngcháng, zhèng xiǎng zhǎo gèrén liáoliao tiān ne - Mọi thứ đều bình thường, tôi đang muốn tìm người tán gẫu đây)"
+                ]
+            }
+        elif any(k in t for k in ["咖啡", "kāfēi", "cafe", "cà phê"]):
             return {
                 "reply_hanzi": "聊到喝咖啡，我每天早上都得来一杯提提神！你平时喜欢喝美式还是拿铁？有常去的咖啡馆吗？",
                 "reply_pinyin": "Liáo dào hē kāfēi, wǒ měitiān zǎoshang dōu děi lái yì bēi títi shén! Nǐ píngshí xǐhuan hē měishì háishì nátiě? Yǒu cháng qù de kāfēiguǎn ma?",
@@ -425,7 +440,19 @@ def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
             }
     else:
         # ENGLISH
-        if any(k in t for k in ["cafe", "cà phê", "coffee"]):
+        if any(k in t for k in ["free", "casual", "tự do", "tán gẫu", "daily talk"]):
+            return {
+                "reply": "Hey there! I'm so glad to chat with you today. How is your day going so far?",
+                "reply_ipa": "/heɪ ðɛr! aɪm soʊ ɡlæd tuː tʃæt wɪð juː təˈdeɪ. haʊ ɪz jʊər deɪ ˈɡoʊɪŋ soʊ fɑːr?/",
+                "translation_vi": "Chào bạn! Tôi rất vui được trò chuyện cùng bạn hôm nay. Ngày hôm nay của bạn trôi qua thế nào rồi?",
+                "feedback": "Cứ trò chuyện tự nhiên như hai người bạn nhé, không cần áp lực ngữ pháp!",
+                "suggested_replies": [
+                    "Pretty good, just having a relaxing evening. (/ˈprɪti ɡʊd, dʒʌst ˈhævɪŋ ə rɪˈlæksɪŋ ˈiːvnɪŋ/ - Khá tốt, tôi đang tận hưởng một buổi tối thư thái.)",
+                    "It's been a bit busy, but I'm doing well. (/ɪts biːn ə bɪt ˈbɪzi, bʌt aɪm ˈduːɪŋ wel/ - Hôm nay hơi bận rộn một chút, nhưng tôi vẫn ổn.)",
+                    "Not bad! I'm ready to practice speaking with you. (/nɑːt bæd! aɪm ˈredi tuː ˈpræktɪs ˈspiːkɪŋ wɪð juː/ - Không tệ! Tôi đã sẵn sàng luyện nói cùng bạn rồi.)"
+                ]
+            }
+        elif any(k in t for k in ["cafe", "cà phê", "coffee"]):
             return {
                 "reply": "I'm always down for good coffee! What's your go-to café drink or favorite spot to hang out?",
                 "reply_ipa": "/aɪm ˈɔːlweɪz daʊn fər ɡʊd ˈkɔːfi! wʌts jʊər ˈɡoʊ tuː kæˈfeɪ drɪŋk ɔːr ˈfeɪvərɪt spɑːt tuː hæŋ aʊt?/",
