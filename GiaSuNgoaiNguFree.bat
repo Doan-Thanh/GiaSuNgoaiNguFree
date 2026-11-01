@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title [GIA SU NGOAI NGU FREE] LUYEN NOI TIENG ANH VA TIENG TRUNG AI 1-KEM-1
+title [GIA SU NGOAI NGU FREE] LUYEN NOI TIENG ANH VA TIENG TRUNG CUNG AI
 color 0e
 
 echo ======================================================================
@@ -20,7 +20,6 @@ echo  * Tên ứng dụng: Gia Sư Ngoại Ngữ Free
 echo  * Tác giả phát triển: THANHBOOKS (Đoàn Đức Thanh)
 echo  * Hỗ trợ: Tiếng Anh (US/UK) & Tiếng Trung (Hanzi + Pinyin + Dịch nghĩa)
 echo  * Tích hợp: Trí tuệ nhân tạo AI thông minh (Miễn phí 100%%)
-echo  * ☕ Mời tác giả 1 ly cà phê: Xem mục [Cài đặt ⚙️] hoặc file HUONG_DAN_SU_DUNG.md
 echo  * Nhấn phím Ctrl + C để tắt ứng dụng khi học xong
 echo ----------------------------------------------------------------------
 echo.
