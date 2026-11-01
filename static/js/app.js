@@ -293,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentLang = appConfig.currentLang || 'en';
       updateLangUI();
-      await loadScenarios();
+      renderTopicHub();
     } catch (err) {
       console.error('Lỗi tải cấu hình:', err);
     }
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       currentLang = targetLang;
       updateLangUI();
-      await loadScenarios();
+      renderTopicHub();
       fetch('/api/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -332,6 +332,153 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+
+  // ==========================================================================
+  // HỆ THỐNG CHỌN TỪ KHÓA CHỦ ĐỀ ĐÀM THOẠI (TOPIC LAUNCHER HUB)
+  // ==========================================================================
+  const TOPIC_PRESETS = {
+    en: [
+      { id: "cafe", icon: "☕", title: "Café & Hanging Out", sub: "Quán cà phê, đồ uống, tán gẫu" },
+      { id: "food", icon: "🍕", title: "Food & Cooking", sub: "Món ăn ngon, ẩm thực, nấu nướng" },
+      { id: "travel", icon: "✈️", title: "Travel & Vacations", sub: "Du lịch, khám phá, đi biển" },
+      { id: "work", icon: "💼", title: "Work & Career", sub: "Công việc, đồng nghiệp, văn phòng" },
+      { id: "movies", icon: "🎬", title: "Movies & Netflix", sub: "Phim ảnh, rạp chiếu, diễn viên" },
+      { id: "music", icon: "🎵", title: "Music & Songs", sub: "Âm nhạc, ca sĩ, ban nhạc yêu thích" },
+      { id: "weather", icon: "🌧️", title: "Weather & Daily Life", sub: "Thời tiết, tâm trạng, nhịp sống" },
+      { id: "shopping", icon: "🛍️", title: "Shopping & Fashion", sub: "Mua sắm, quần áo, thời trang" },
+      { id: "fitness", icon: "🏋️", title: "Fitness & Health", sub: "Tập gym, thể thao, sức khỏe" },
+      { id: "pets", icon: "🐾", title: "Pets & Animals", sub: "Chó mèo, thú cưng, chăm sóc" },
+      { id: "money", icon: "💰", title: "Money & Spending", sub: "Tiền bạc, chi tiêu, tiết kiệm" },
+      { id: "books", icon: "📚", title: "Books & Self-Growth", sub: "Đọc sách, học tập, phát triển" },
+      { id: "commute", icon: "🚗", title: "Traffic & Commute", sub: "Xe cộ, đường phố, đi lại" },
+      { id: "weekend", icon: "🏖️", title: "Weekend Plans", sub: "Kế hoạch cuối tuần, xả stress" },
+      { id: "free", icon: "💬", title: "Casual Daily Talk", sub: "Trò chuyện tự do mọi điều" }
+    ],
+    zh: [
+      { id: "cafe", icon: "☕", title: "喝咖啡与探店", sub: "Quán cà phê, hẹn hò, đồ uống" },
+      { id: "food", icon: "🍕", title: "美食与烹饪", sub: "Ẩm thực Trung - Việt, nấu nướng" },
+      { id: "travel", icon: "✈️", title: "旅游与度假", sub: "Du lịch ngắm cảnh, đi chơi xa" },
+      { id: "work", icon: "💼", title: "职场与工作", sub: "Đi làm, đồng nghiệp, văn phòng" },
+      { id: "movies", icon: "🎬", title: "电影与追剧", sub: "Phim ảnh, xem rạp, thần tượng" },
+      { id: "music", icon: "🎵", title: "音乐与爱好", sub: "Âm nhạc, sở thích nghe nhạc" },
+      { id: "weather", icon: "🌧️", title: "天气与生活", sub: "Thời tiết, tâm trạng, khí hậu" },
+      { id: "shopping", icon: "🛍️", title: "逛街与网购", sub: "Mua sắm, săn sale Taobao, thời trang" },
+      { id: "fitness", icon: "🏋️", title: "健身与运动", sub: "Tập gym, chạy bộ, giữ dáng" },
+      { id: "pets", icon: "🐾", title: "萌宠与动物", sub: "Nuôi mèo chó, thú cưng đáng yêu" },
+      { id: "money", icon: "💰", title: "消费与理财", sub: "Chi tiêu, tiền bạc, tiết kiệm" },
+      { id: "books", icon: "📚", title: "学习与阅读", sub: "Đọc sách, học tiếng Trung, tiến bộ" },
+      { id: "commute", icon: "🚗", title: "交通与出行", sub: "Tàu điện ngầm, xe cộ, đi lại" },
+      { id: "weekend", icon: "🏖️", title: "周末去哪儿", sub: "Kế hoạch cuối tuần, xả hơi" },
+      { id: "free", icon: "💬", title: "随心日常闲聊", sub: "Tán gẫu tự do mọi chủ đề" }
+    ]
+  };
+
+  let currentTopic = "";
+
+  function renderTopicHub() {
+    stopAllSpeech();
+    chatHistory = [];
+    turnCount = 0;
+    currentTopic = "";
+    suggestionsContainer.style.display = 'none';
+    currentScenarioTitle.textContent = "🎯 Chọn Chủ Đề";
+
+    const isZh = currentLang === 'zh';
+    const topics = TOPIC_PRESETS[currentLang] || TOPIC_PRESETS.en;
+
+    chatMessages.innerHTML = `
+      <div class="topic-hub-container" id="topic-hub">
+        <div class="topic-hub-header">
+          <div class="topic-hub-badge">🎯 ${isZh ? '选择口语交流主题' : 'TỪ KHÓA CHỦ ĐỀ ĐÀM THOẠI'}</div>
+          <h2 class="topic-hub-title">${isZh ? '今天你想聊什么话题？' : 'Hôm nay bạn muốn luyện nói về chủ đề gì?'}</h2>
+          <p class="topic-hub-subtitle">${isZh ? '选择下方生活主题关键词，或直接输入你想聊的任意话题：' : 'Chọn một từ khóa gợi ý bên dưới hoặc tự nhập chủ đề bạn thích để bắt đầu nhé:'}</p>
+        </div>
+
+        <div class="topic-custom-box">
+          <input type="text" id="input-custom-topic" placeholder="${isZh ? '💡 输入任意话题 (例如: 去三亚旅游、吃火锅、宠物狗...)' : '💡 Tự nhập chủ đề bạn thích (vd: Đi phượt Đà Lạt, Mua xe mới, Thú cưng...)'}" />
+          <button id="btn-start-custom-topic">${isZh ? '开始 ➔' : 'Bắt Đầu ➔'}</button>
+        </div>
+
+        <div class="topic-chips-grid">
+          ${topics.map(t => `
+            <div class="topic-chip-item" data-topic="${escapeHtml(t.title)}">
+              <span class="topic-chip-title">${t.icon} ${escapeHtml(t.title)}</span>
+              <span class="topic-chip-sub">${escapeHtml(t.sub)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+
+    const chips = chatMessages.querySelectorAll('.topic-chip-item');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const selectedTopic = chip.getAttribute('data-topic');
+        startTopicConversation(selectedTopic);
+      });
+    });
+
+    const btnCustom = chatMessages.querySelector('#btn-start-custom-topic');
+    const inputCustom = chatMessages.querySelector('#input-custom-topic');
+    if (btnCustom && inputCustom) {
+      const handleCustom = () => {
+        const val = inputCustom.value.trim();
+        if (val) {
+          startTopicConversation(val);
+        } else {
+          startTopicConversation(isZh ? '随心日常闲聊' : 'Casual Daily Talk');
+        }
+      };
+      btnCustom.addEventListener('click', handleCustom);
+      inputCustom.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleCustom();
+      });
+    }
+  }
+
+  async function startTopicConversation(topicName) {
+    currentTopic = topicName;
+    currentScenarioTitle.textContent = `🎯 ${topicName.split('(')[0].trim()}`;
+    chatHistory = [];
+    turnCount = 1;
+
+    chatMessages.innerHTML = `
+      <div class="msg-row bot" id="temp-topic-loading">
+        <div class="msg-bubble" style="opacity: 0.9; font-size: 0.88rem; color: #94a3b8;">
+          ✨ Gia sư AI đang chuẩn bị câu chuyện về <b>"${escapeHtml(topicName)}"</b>...
+        </div>
+      </div>
+    `;
+
+    try {
+      const res = await fetch('/api/topic/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: topicName,
+          lang: currentLang
+        })
+      });
+      const data = await res.json();
+      const loadingEl = document.getElementById('temp-topic-loading');
+      if (loadingEl) loadingEl.remove();
+
+      if (data.success && data.aiResult) {
+        const botReply = currentLang === 'zh'
+          ? (data.aiResult.reply_hanzi || '')
+          : (data.aiResult.reply || '');
+        chatHistory.push({ role: 'assistant', content: botReply });
+        appendBotMessage(data.aiResult, data.audio);
+      } else {
+        alert(data.detail || 'Lỗi khởi tạo chủ đề');
+      }
+    } catch (err) {
+      const loadingEl = document.getElementById('temp-topic-loading');
+      if (loadingEl) loadingEl.remove();
+      alert('Lỗi kết nối: ' + err.message);
+    }
+  }
 
   async function loadScenarios() {
     try {
@@ -619,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             lang: currentLang,
-            scenarioId: currentScenario ? currentScenario.id : '',
+            scenarioId: currentTopic || (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk'),
             turnCount: turnCount,
             history: chatHistory.slice(-4)
           })
@@ -820,7 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           userText: text,
           lang: currentLang,
-          scenarioId: currentScenario ? currentScenario.id : '',
+          scenarioId: currentTopic || (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk'),
           history: chatHistory.slice(-6),
           turnCount: turnCount
         })
@@ -869,13 +1016,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. MODAL EVENT HANDLERS
   if (currentScenarioTitle) {
     currentScenarioTitle.style.cursor = 'pointer';
-    currentScenarioTitle.title = 'Bấm vào đây để chọn tình huống khác';
+    currentScenarioTitle.title = 'Bấm vào đây để chọn chủ đề khác';
     currentScenarioTitle.addEventListener('click', () => {
-      modalScenarios.style.display = 'flex';
+      renderTopicHub();
     });
   }
   btnShowScenarios.addEventListener('click', () => {
-    modalScenarios.style.display = 'flex';
+    renderTopicHub();
   });
   btnCloseScenarios.addEventListener('click', () => {
     modalScenarios.style.display = 'none';

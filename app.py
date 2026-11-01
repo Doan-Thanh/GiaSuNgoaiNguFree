@@ -12,7 +12,7 @@ import uvicorn
 
 from engine.port_finder import find_safe_port
 from engine.tts_engine import generate_speech_base64, VOICE_OPTIONS, DEFAULT_VOICES
-from engine.ai_tutor import SCENARIOS, process_tutor_chat, get_dynamic_offline_response, generate_fresh_suggestions
+from engine.ai_tutor import SCENARIOS, process_tutor_chat, get_dynamic_offline_response, generate_fresh_suggestions, start_topic_conversation
 import engine.analytics as analytics
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -155,6 +155,35 @@ async def handle_chat(payload: dict = Body(...)):
     return {
         "success": True,
         "lang": lang,
+        "aiResult": ai_result,
+        "audio": audio_b64
+    }
+
+@app.post("/api/topic/start")
+async def start_topic(payload: dict = Body(...)):
+    topic = payload.get("topic", "Trò chuyện tự do").strip()
+    lang = payload.get("lang", "en")
+    voice = payload.get("voice")
+
+    cfg = load_config()
+    api_key = cfg.get("geminiApiKey", "").strip()
+    preferred_model = cfg.get("geminiModel", "gemini-3.5-flash-lite")
+
+    ai_result = start_topic_conversation(
+        api_key=api_key,
+        topic=topic,
+        lang=lang,
+        preferred_model=preferred_model
+    )
+
+    speak_text = ai_result.get("reply_hanzi", "") if lang == "zh" else ai_result.get("reply", "")
+    chosen_voice = voice or (cfg.get("voiceZh", DEFAULT_VOICES["zh"]) if lang == "zh" else cfg.get("voiceEn", DEFAULT_VOICES["en"]))
+    audio_b64 = await generate_speech_base64(speak_text, chosen_voice, lang)
+
+    return {
+        "success": True,
+        "lang": lang,
+        "topic": topic,
         "aiResult": ai_result,
         "audio": audio_b64
     }

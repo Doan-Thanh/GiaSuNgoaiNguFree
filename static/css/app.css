@@ -997,3 +997,124 @@ body.mobile-app-body {
   color: var(--text-main);
   line-height: 1.5;
 }
+
+/* ==========================================================================
+   TOPIC LAUNCHER HUB (CHỌN TỪ KHÓA CHỦ ĐỀ ĐÀM THOẠI)
+   ========================================================================== */
+.topic-hub-container {
+  width: 100%;
+  max-width: 580px;
+  margin: 10px auto 20px;
+  padding: 18px 16px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.topic-hub-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.topic-hub-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+}
+
+.topic-hub-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.topic-hub-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.topic-custom-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.topic-custom-box input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-app);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  color: var(--text-main);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.topic-custom-box input:focus {
+  border-color: var(--accent-cyan);
+}
+
+.topic-custom-box button {
+  background: linear-gradient(135deg, var(--accent-cyan), #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.topic-custom-box button:hover {
+  opacity: 0.9;
+}
+
+.topic-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.topic-chip-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.topic-chip-item:hover {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-2px);
+}
+
+.topic-chip-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.topic-chip-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}

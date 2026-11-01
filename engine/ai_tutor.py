@@ -322,3 +322,154 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
         "feedback": "Phát âm tiếng Anh rất tự nhiên! Hãy chú ý ngữ điệu lên xuống tự nhiên ở cuối câu.",
         "suggested_replies": suggestions
     }
+
+
+# ==============================================================================
+# HỆ THỐNG KHỞI TẠO CHỦ ĐỀ ĐÀM THOẠI ĐA DẠNG (TOPIC CONVERSATION ENGINE)
+# ==============================================================================
+
+def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3.5-flash-lite") -> dict:
+    """Khởi tạo cuộc trò chuyện mở đầu sinh động về bất kỳ chủ đề đàm thoại nào được chọn."""
+    if not topic or not topic.strip():
+        topic = "Trò chuyện tự do"
+
+    if api_key:
+        try:
+            if lang == "zh":
+                prompt_text = f"""你是一位热情、幽默的中国母语中文语伴（北京标准口音）。
+用户刚选择了日常口语交流主题：“{topic}”。
+
+任务：
+请自然且简短地开场（1-2句话）。对主题“{topic}”做一个接地气、生动的开场白，并提出一个开放式的好问题引发交流。
+
+严格输出JSON格式：
+- "reply_hanzi": 中文开场白（简体中文，1-2句话）。
+- "reply_pinyin": 拼音带完整声调。
+- "translation_vi": 越南语自然流畅翻译。
+- "feedback": 简短鼓励提示（越南语），鼓励用户大胆开口练习。
+- "suggested_replies": 3个具体的回复建议，格式严格为："中文句子 (拼音 - 越南语翻译)"。"""
+            else:
+                prompt_text = f"""You are an enthusiastic, warm native English conversational tutor.
+The user just selected this daily conversation topic: "{topic}".
+
+TASK:
+Open the conversation naturally and concisely (1-2 sentences). Share a quick relatable remark about "{topic}" and ask an engaging open-ended question to kick off the talk.
+
+Provide strictly valid JSON format:
+- "reply": Your English opening message (1-2 sentences).
+- "reply_ipa": International Phonetic Alphabet (IPA) transcription of your reply enclosed in slashes, e.g. "/.../".
+- "translation_vi": Natural Vietnamese translation of your reply.
+- "feedback": Welcoming tip in Vietnamese encouraging the learner to speak freely.
+- "suggested_replies": Array of 3 natural, specific conversational phrases the user can say to reply to your question. Each formatted strictly as: "English sentence (/IPA/ - Dịch tiếng Việt)"."""
+
+            single_turn_history = [{"role": "user", "content": prompt_text}]
+            raw_res = call_gemini_api(api_key, single_turn_history, preferred_model=preferred_model)
+            parsed = json.loads(raw_res)
+            return parsed
+        except Exception as e:
+            logger.warning(f"Lỗi khởi tạo chủ đề qua Gemini: {e}")
+
+    # Fallback ngoại tuyến sinh động theo chủ đề
+    return get_topic_offline_opener(topic, lang)
+
+def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
+    t = topic.lower()
+    if lang == "zh":
+        if any(k in t for k in ["咖啡", "kāfēi", "cafe", "cà phê"]):
+            return {
+                "reply_hanzi": "聊到喝咖啡，我每天早上都得来一杯提提神！你平时喜欢喝美式还是拿铁？有常去的咖啡馆吗？",
+                "reply_pinyin": "Liáo dào hē kāfēi, wǒ měitiān zǎoshang dōu děi lái yì bēi títi shén! Nǐ píngshí xǐhuan hē měishì háishì nátiě? Yǒu cháng qù de kāfēiguǎn ma?",
+                "translation_vi": "Nhắc đến cà phê, sáng nào tôi cũng phải làm một ly cho tỉnh táo! Bạn hay uống Americano hay Latte? Có quán ruột nào hay ghé không?",
+                "feedback": "Chủ đề cà phê rất gần gũi! Bạn có thể trả lời bằng việc kể loại cà phê yêu thích của mình.",
+                "suggested_replies": [
+                    "我更喜欢喝冰美式，比较清爽无负担 (Wǒ gèng xǐhuan hē bīng měishì, bǐjiào qīngshuǎng wú fùdān - Tôi thích Americano đá hơn, thanh nhẹ không béo)",
+                    "我每天必喝热拿铁，奶香味特别浓 (Wǒ měitiān bì hē rè nátiě, nǎi xiāngwèi tèbié nóng - Ngày nào tôi cũng uống Latte nóng, thơm đậm vị sữa)",
+                    "我平时不太喝咖啡，更喜欢喝奶茶或水果茶 (Wǒ píngshí bú tài hē kāfēi, gèng xǐhuan hē nǎichá huò shuǐguǒchá - Bình thường tôi ít uống cà phê, thích trà sữa hoặc trà hoa quả hơn)"
+                ]
+            }
+        elif any(k in t for k in ["美食", "菜", "饭", "ăn", "ẩm thực", "food"]):
+            return {
+                "reply_hanzi": "聊到好吃的我可就不困了！你最喜欢哪一种菜系？有没有什么百吃不厌的家常菜？",
+                "reply_pinyin": "Liáo dào hǎochī de wǒ kě jiù bú kùn le! Nǐ zuì xǐhuan nǎ yì zhǒng càixì? Yǒu méiyǒu shénme bǎi chī bú yàn de jiāchángcài?",
+                "translation_vi": "Nói đến đồ ăn ngon là tôi tỉnh cả ngủ! Bạn thích ẩm thực món gì nhất? Có món cơm nhà nào ăn hoài không chán không?",
+                "feedback": "Nói về đồ ăn rất dễ mở rộng câu chuyện. Hãy miêu tả vị ngon nhé!",
+                "suggested_replies": [
+                    "我特别喜欢吃火锅，又麻又辣特别过瘾 (Wǒ tèbié xǐhuan chī huǒguō, yòu má yòu là tèbié guòyǐn - Tôi mê ăn lẩu cay tê, ăn cực kỳ đã)",
+                    "我最喜欢越南牛肉粉和春卷，汤头特别鲜 (Wǒ zuì xǐhuan Yuènán niúròufěn hé chūnjuǎn, tāngtóu tèbié xiān - Tôi thích nhất phở bò và nem rán Việt Nam, nước dùng thanh ngọt)",
+                    "我平时喜欢自己在家做饭，既健康又省钱 (Wǒ píngshí xǐhuan zìjǐ zài jiā zuòfàn, jì jiànkāng yòu shěngqián - Tôi hay tự nấu ăn ở nhà, vừa sạch lại tiết kiệm)"
+                ]
+            }
+        elif any(k in t for k in ["旅游", "度假", "du lịch", "travel"]):
+            return {
+                "reply_hanzi": "旅行总能让人心情变好！你至今去过最难忘的地方是哪里？接下来最想去哪儿玩？",
+                "reply_pinyin": "Lǚxíng zǒng néng ràng rén xīanqíng biàn hǎo! Nǐ zhìjīn qù guo zuì nánwàng de dìfang shì nǎlǐ? Jiēxiàlai zuì xiǎng qù nǎr wán?",
+                "translation_vi": "Đi du lịch lúc nào cũng làm tâm trạng phấn chấn! Nơi đáng nhớ nhất bạn từng đi là đâu? Sắp tới muốn đi đâu nhất?",
+                "feedback": "Hãy chia sẻ về cảnh đẹp hoặc kỷ niệm một chuyến đi của bạn.",
+                "suggested_replies": [
+                    "我最难忘的是去北京看长城和故宫，非常震撼 (Wǒ zuì nánwàng de shì qù Běijīng kàn Chángchéng hé Gùgōng, fēicháng zhènhàn - Đáng nhớ nhất là lần đi Bắc Kinh ngắm Vạn Lý Trường Thành và Cố Cung)",
+                    "我更喜欢去海边度假，吹吹海风晒晒太阳 (Wǒ gèng xǐhuan qù hǎibiān dùjià, chuīchui hǎifēng shàishai tàiyáng - Tôi thích đi biển nghỉ dưỡng, hóng gió và tắm nắng hơn)",
+                    "我打算今年休年假的时候出国走走 (Wǒ dǎsuàn jīnnián xiū niánjià de shíhou chūguó zǒuzou - Tôi tính dịp nghỉ phép năm nay sẽ đi du lịch nước ngoài một chuyến)"
+                ]
+            }
+        else:
+            return {
+                "reply_hanzi": f"太棒了！今天我们一起来聊聊“{topic}”吧。关于这个话题，你最想跟我分享什么？",
+                "reply_pinyin": f"Tài bàng le! Jīntiān wǒmen yìqǐ lái liáoliao “{topic}” ba. Guānyú zhège huàtí, nǐ zuì xiǎng gēn wǒ fēnxiǎng shénme?",
+                "translation_vi": f"Tuyệt vời! Hôm nay chúng ta cùng trò chuyện về chủ đề “{topic}” nhé. Về chủ đề này, bạn muốn chia sẻ điều gì nhất cùng tôi?",
+                "feedback": "Bạn hãy trả lời tự nhiên theo suy nghĩ của mình, đừng ngại phát âm nhé!",
+                "suggested_replies": [
+                    "我对这个话题特别感兴趣，平时经常关注 (Wǒ duì zhège huàtí tèbié gǎnxìngqù, píngshí jīngcháng guānzhù - Tôi rất quan tâm chủ đề này, thường xuyên theo dõi)",
+                    "其实我了解得不算多，正想听听你的看法 (Qíshí wǒ liǎojiě de bú suàn duō, zhèng xiǎng tīngting nǐ de kànfǎ - Thực ra tôi chưa biết nhiều lắm, muốn nghe góc nhìn từ bạn)",
+                    "从我个人的经验来看，这确实挺有意思的 (Cóng wǒ gèrén de jīngyàn lái kàn, zhè quèshí tǐng yǒu yìsi de - Từ trải nghiệm cá nhân của tôi, chuyện này quả thật rất thú vị)"
+                ]
+            }
+    else:
+        # ENGLISH
+        if any(k in t for k in ["cafe", "cà phê", "coffee"]):
+            return {
+                "reply": "I'm always down for good coffee! What's your go-to café drink or favorite spot to hang out?",
+                "reply_ipa": "/aɪm ˈɔːlweɪz daʊn fər ɡʊd ˈkɔːfi! wʌts jʊər ˈɡoʊ tuː kæˈfeɪ drɪŋk ɔːr ˈfeɪvərɪt spɑːt tuː hæŋ aʊt?/",
+                "translation_vi": "Tôi luôn sẵn sàng cho một tách cà phê ngon! Đồ uống 'ruột' của bạn ở quán hay nơi bạn thích ngồi tán gẫu là gì?",
+                "feedback": "Talking about coffee and cafes is super natural! Share what you like to sip on.",
+                "suggested_replies": [
+                    "I love an iced Americano to start my busy morning. (/aɪ lʌv ən aɪst əˌmerɪˈkɑːnoʊ tuː stɑːrt maɪ ˈbɪzi ˈmɔːrnɪŋ/ - Tôi mê một ly Americano đá để khởi đầu buổi sáng bận rộn.)",
+                    "I usually get a hot vanilla latte with oat milk. (/aɪ ˈjuːʒuəli ɡet ə hɑːt vəˈnɪlə ˈlɑːteɪ wɪð oʊt mɪlk/ - Tôi thường gọi một ly latte vani nóng với sữa yến mạch.)",
+                    "I'm actually more of a tea person, especially matcha! (/aɪm ˈæktʃuəli mɔːr əv ə tiː ˈpɜːrsən, əˈspeʃəli ˈmætʃə/ - Thực ra tôi là người thích uống trà hơn, đặc biệt là matcha!)"
+                ]
+            }
+        elif any(k in t for k in ["food", "cooking", "ăn", "ẩm thực"]):
+            return {
+                "reply": "Talking about delicious food always gets me excited! What is your absolute favorite comfort food?",
+                "reply_ipa": "/ˈtɔːkɪŋ əˈbaʊt dɪˈlɪʃəs fuːd ˈɔːlweɪz ɡets miː ɪkˈsaɪtɪd! wʌt ɪz jʊər ˈæbsəluːt ˈfeɪvərɪt ˈkʌmfərt fuːd?/",
+                "translation_vi": "Nói về đồ ăn ngon lúc nào cũng làm tôi hào hứng! Món ăn khoái khẩu nhất của bạn là gì?",
+                "feedback": "Food vocabulary is great for practice. Don't hesitate to describe flavors!",
+                "suggested_replies": [
+                    "Nothing beats a hot bowl of traditional beef pho. (/ˈnʌθɪŋ biːts ə hɑːt boʊl əv trəˈdɪʃənl biːf fɜːr/ - Không gì sánh bằng một tô phở bò truyền thống bốc khói nghi ngút.)",
+                    "I'm a huge fan of Italian pasta and crispy pizza. (/aɪm ə hjuːdʒ fæn əv ɪˈtæljən ˈpɑːstə ænd ˈkrɪspi ˈpiːtsə/ - Tôi là fan cuồng của mì Ý và pizza giòn rụm.)",
+                    "I really enjoy cooking simple homemade meals every evening. (/aɪ ˈriːəli ɪnˈdʒɔɪ ˈkʊkɪŋ ˈsɪmpəl ˈhoʊmmeɪd miːlz ˈevri ˈiːvnɪŋ/ - Tôi rất thích tự nấu những bữa cơm nhà giản dị mỗi tối.)"
+                ]
+            }
+        elif any(k in t for k in ["travel", "du lịch", "vacation"]):
+            return {
+                "reply": "Traveling is such an incredible way to explore the world! What was the most unforgettable trip you've ever had?",
+                "reply_ipa": "/ˈtrævəlɪŋ ɪz sʌtʃ ən ɪnˈkredəbəl weɪ tuː ɪkˈsplɔːr ðə wɜːrld! wʌt wʌz ðə moʊst ˌʌnfərˈɡetəbəl trɪp juːv ˈevər hæd?/",
+                "translation_vi": "Đi du lịch là cách tuyệt vời nhất để khám phá thế giới! Chuyến đi đáng nhớ nhất bạn từng trải nghiệm là gì?",
+                "feedback": "Use past tense to share memories of your best trips!",
+                "suggested_replies": [
+                    "My trip to the coastal beaches was totally breathtaking. (/maɪ trɪp tuː ðə ˈkoʊstl ˈbiːtʃɪz wʌz ˈtoʊtəli ˈbreθteɪkɪŋ/ - Chuyến đi tới các bãi biển của tôi đẹp đến ngỡ ngàng.)",
+                    "I love exploring vibrant city nightlife and local street food. (/aɪ lʌv ɪkˈsplɔːrɪŋ ˈvaɪbrənt ˈsɪti ˈnaɪtlaɪf ænd ˈloʊkl striːt fuːd/ - Tôi thích khám phá cuộc sống về đêm sôi động và ẩm thực đường phố.)",
+                    "I'm planning an exciting road trip with friends this summer. (/aɪm ˈplænɪŋ ən ɪkˈsaɪtɪŋ roʊd trɪp wɪð frendz ðɪs ˈsʌmər/ - Tôi đang lên kế hoạch cho một chuyến phượt cùng bạn bè vào mùa hè này.)"
+                ]
+            }
+        else:
+            return {
+                "reply": f"Awesome choice! Let's talk about '{topic}'. What comes to your mind first when you think about this?",
+                "reply_ipa": f"/ˈɔːsəm tʃɔɪs! lets tɔːk əˈbaʊt ðɪs. wʌt kʌmz tuː jʊər maɪnd fɜːrst wen juː θɪŋk əˈbaʊt ɪt?/",
+                "translation_vi": f"Lựa chọn tuyệt vời! Chúng ta cùng trò chuyện về '{topic}' nhé. Điều đầu tiên bạn nghĩ đến khi nhắc tới chủ đề này là gì?",
+                "feedback": "Feel free to share your personal thoughts and opinions naturally!",
+                "suggested_replies": [
+                    "I find this topic really interesting and relevant to my daily life. (/aɪ faɪnd ðɪs ˈtɑːpɪk ˈriːəli ˈɪntrəstɪŋ ænd ˈreləvənt tuː maɪ ˈdeɪli laɪf/ - Tôi thấy chủ đề này thực sự thú vị và gắn liền với cuộc sống hàng ngày.)",
+                    "I haven't thought much about it, but I'm eager to hear your take. (/aɪ hævnt θɔːt mʌtʃ əˈbaʊt ɪt, bʌt aɪm ˈiːɡər tuː hɪr jʊər teɪk/ - Tôi chưa nghĩ nhiều về nó, nhưng rất háo hức muốn nghe ý kiến của bạn.)",
+                    "In my personal experience, it has both advantages and challenges. (/ɪn maɪ ˈpɜːrsənl ɪkˈspɪriəns, ɪt hæz boʊθ ədˈvæntɪdʒɪz ænd ˈtʃælɪndʒɪz/ - Theo kinh nghiệm cá nhân của tôi, nó vừa có lợi thế vừa có thách thức.)"
+                ]
+            }
