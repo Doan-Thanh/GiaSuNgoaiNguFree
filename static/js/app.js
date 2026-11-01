@@ -454,66 +454,90 @@ document.addEventListener('DOMContentLoaded', () => {
     return { main, pinyin, trans, cleanMsg: main };
   }
 
+  let currentSuggestionsList = [];
+  let currentSuggestionIndex = 0;
+
   function renderSuggestions(suggestions) {
     if (!suggestions || suggestions.length === 0) {
+      suggestionsContainer.style.display = 'none';
+      currentSuggestionsList = [];
+      currentSuggestionIndex = 0;
+      return;
+    }
+
+    currentSuggestionsList = suggestions;
+    currentSuggestionIndex = 0;
+    displayCurrentSuggestion();
+    suggestionsContainer.style.display = 'block';
+  }
+
+  function displayCurrentSuggestion() {
+    suggestionsList.innerHTML = '';
+    if (!currentSuggestionsList || currentSuggestionsList.length === 0) {
       suggestionsContainer.style.display = 'none';
       return;
     }
 
-    suggestionsList.innerHTML = '';
-    suggestionsList.scrollLeft = 0;
+    const item = currentSuggestionsList[currentSuggestionIndex];
+    const parsed = parseSuggestionItem(item, currentLang);
 
-    suggestions.forEach(item => {
-      const parsed = parseSuggestionItem(item, currentLang);
+    const chip = document.createElement('div');
+    chip.className = 'suggestion-chip';
 
-      const chip = document.createElement('div');
-      chip.className = 'suggestion-chip';
+    let innerHtml = `
+      <div class="chip-header-row">
+        <span class="chip-speaker-btn" title="Nghe phát âm mẫu">🔊</span>
+        <span class="chip-main-text">${escapeHtml(parsed.main)}</span>
+      </div>
+    `;
 
-      let innerHtml = `
-        <div class="chip-header-row">
-          <span class="chip-speaker-btn" title="Nghe phát âm mẫu">🔊</span>
-          <span class="chip-main-text">${escapeHtml(parsed.main)}</span>
-        </div>
-      `;
+    if (parsed.pinyin) {
+      innerHtml += `<div class="chip-pinyin-row pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(parsed.pinyin)}</div>`;
+    }
 
-      if (parsed.pinyin) {
-        innerHtml += `<div class="chip-pinyin-row pinyin-text" style="display:${showPinyin ? 'block' : 'none'};">${escapeHtml(parsed.pinyin)}</div>`;
-      }
+    if (parsed.trans) {
+      innerHtml += `<div class="chip-trans-row translation-text" style="display:${showTranslation ? 'block' : 'none'};">${escapeHtml(parsed.trans)}</div>`;
+    }
 
-      if (parsed.trans) {
-        innerHtml += `<div class="chip-trans-row translation-text" style="display:${showTranslation ? 'block' : 'none'};">${escapeHtml(parsed.trans)}</div>`;
-      }
+    chip.innerHTML = innerHtml;
 
-      chip.innerHTML = innerHtml;
-
-      // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu
-      const speakerBtn = chip.querySelector('.chip-speaker-btn');
-      if (speakerBtn) {
-        speakerBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          speakerBtn.style.opacity = '1';
-          speakerBtn.textContent = '⏳';
-          playTTSAudio(parsed.cleanMsg, currentLang).finally(() => {
-            speakerBtn.textContent = '🔊';
-          });
+    // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu
+    const speakerBtn = chip.querySelector('.chip-speaker-btn');
+    if (speakerBtn) {
+      speakerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakerBtn.textContent = '⏳';
+        playTTSAudio(parsed.cleanMsg, currentLang).finally(() => {
+          speakerBtn.textContent = '🔊';
         });
-      }
-
-      // Bấm vào thân thẻ -> gửi tin nhắn
-      chip.addEventListener('click', () => {
-        sendUserMessage(parsed.cleanMsg);
       });
+    }
 
-      suggestionsList.appendChild(chip);
+    // Bấm vào thân thẻ -> gửi tin nhắn
+    chip.addEventListener('click', () => {
+      sendUserMessage(parsed.cleanMsg);
     });
-    suggestionsContainer.style.display = 'block';
+
+    suggestionsList.appendChild(chip);
+
+    if (btnRefreshSuggestions) {
+      btnRefreshSuggestions.textContent = '🔄 Gợi ý khác';
+    }
   }
 
-  // Đổi gợi ý khác
+  // Đổi gợi ý khác: Chuyển ngay sang gợi ý tiếp theo, hết vòng thì gọi AI
   if (btnRefreshSuggestions) {
     btnRefreshSuggestions.addEventListener('click', async () => {
+      // 1. Nếu còn gợi ý trong danh sách hiện tại -> chuyển ngay tức thì (0ms trễ)
+      if (currentSuggestionsList && currentSuggestionsList.length > 1 && currentSuggestionIndex < currentSuggestionsList.length - 1) {
+        currentSuggestionIndex++;
+        displayCurrentSuggestion();
+        return;
+      }
+
+      // 2. Nếu đã xem hết danh sách hiện tại -> gọi AI lấy 3 gợi ý mới
       try {
-        btnRefreshSuggestions.textContent = '⏳ Đang đổi...';
+        btnRefreshSuggestions.textContent = '⏳ Đang tìm...';
         btnRefreshSuggestions.style.opacity = '0.6';
         btnRefreshSuggestions.disabled = true;
 
@@ -529,13 +553,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success && data.suggestions && data.suggestions.length > 0) {
-          renderSuggestions(data.suggestions);
-          suggestionsList.scrollLeft = 0;
+          currentSuggestionsList = data.suggestions;
+          currentSuggestionIndex = 0;
+          displayCurrentSuggestion();
+        } else {
+          // Quay lại câu đầu nếu không lấy được thêm
+          currentSuggestionIndex = 0;
+          displayCurrentSuggestion();
         }
       } catch (err) {
         console.warn('Lỗi đổi gợi ý:', err);
+        currentSuggestionIndex = 0;
+        displayCurrentSuggestion();
       } finally {
-        btnRefreshSuggestions.textContent = '🔄 Đổi gợi ý khác';
+        btnRefreshSuggestions.textContent = '🔄 Gợi ý khác';
         btnRefreshSuggestions.style.opacity = '1';
         btnRefreshSuggestions.disabled = false;
       }
