@@ -4,7 +4,7 @@ import logging
 import webbrowser
 import threading
 import time
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +13,7 @@ import uvicorn
 from engine.port_finder import find_safe_port
 from engine.tts_engine import generate_speech_base64, VOICE_OPTIONS, DEFAULT_VOICES
 from engine.ai_tutor import SCENARIOS, process_tutor_chat, get_dynamic_offline_response, generate_fresh_suggestions
+import engine.analytics as analytics
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("ThanhBooksAI")
@@ -61,12 +62,26 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 @app.get("/", response_class=HTMLResponse)
-async def serve_index():
+async def serve_index(request: Request):
+    ua = request.headers.get("user-agent", "")
+    analytics.record_visit(ua)
     index_path = os.path.join(BASE_DIR, "templates", "index.html")
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     return HTMLResponse("<h3>Chưa tìm thấy templates/index.html</h3>")
+
+@app.get("/stats", response_class=HTMLResponse)
+async def serve_stats():
+    stats_path = os.path.join(BASE_DIR, "templates", "stats.html")
+    if os.path.exists(stats_path):
+        with open(stats_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse("<h3>Chưa tìm thấy templates/stats.html</h3>")
+
+@app.get("/api/stats")
+async def get_stats_data():
+    return analytics.get_stats_summary()
 
 @app.get("/api/config")
 async def get_config():
@@ -101,6 +116,12 @@ async def handle_chat(payload: dict = Body(...)):
 
     if not user_text:
         raise HTTPException(status_code=400, detail="Nội dung nói không được để trống.")
+
+    # Ghi nhận thống kê lượt luyện nói
+    try:
+        analytics.record_chat(lang=lang, scenario_id=scenario_id)
+    except Exception as e:
+        logger.warning(f"Lỗi ghi nhận analytics chat: {e}")
 
     cfg = load_config()
     api_key = cfg.get("geminiApiKey", "").strip()

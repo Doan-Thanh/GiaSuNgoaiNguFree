@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Thống Kê Hoạt Động — Gia Sư Ngoại Ngữ Free</title>
+  <link rel="icon" type="image/png" href="/static/img/app-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-surface: #111827;
+      --bg-card: #1f2937;
+      --border-card: #374151;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 16px;
+      min-height: 100vh;
+    }
+    .stats-container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    /* HEADER */
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-card);
+      margin-bottom: 20px;
+    }
+    .header-brand h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-brand p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn-action {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn-action:hover {
+      background: #374151;
+      border-color: var(--accent-cyan);
+    }
+    .btn-action.primary {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border: none;
+    }
+
+    /* KPI CARDS GRID */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .kpi-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--border-card);
+    }
+    .kpi-card.visits::before { background: var(--accent-blue); }
+    .kpi-card.chats::before { background: var(--accent-green); }
+    .kpi-card.lang-en::before { background: #38bdf8; }
+    .kpi-card.lang-zh::before { background: var(--accent-rose); }
+
+    .kpi-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .kpi-sub b {
+      color: var(--accent-amber);
+    }
+
+    /* SECTION CARDS */
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .dashboard-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .panel-header {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* BARS & LISTS */
+    .scenario-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+    .scenario-count {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    /* ACTIVITY STREAM */
+    .activity-list {
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.84rem;
+    }
+    .activity-time {
+      font-family: monospace;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      min-width: 65px;
+    }
+    .activity-desc {
+      color: var(--text-main);
+      flex: 1;
+    }
+    .activity-tag {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .tag-visit { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+    .tag-chat { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+    /* STATUS FOOTER */
+    .status-footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .live-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      margin-right: 4px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stats-container">
+    <!-- HEADER -->
+    <header class="stats-header">
+      <div class="header-brand">
+        <h1>📊 Bảng Giám Sát Người Dùng</h1>
+        <p>Gia Sư Ngoại Ngữ Free • Phát triển bởi <b>ThanhBooks (Đoàn Đức Thanh)</b></p>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="btn-action primary">🏠 Về Trang Học</a>
+        <button class="btn-action" id="btn-refresh">🔄 Làm Mới</button>
+      </div>
+    </header>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card visits">
+        <div class="kpi-title">👥 Tổng Lượt Vào Web</div>
+        <div class="kpi-value" id="val-total-visits">0</div>
+        <div class="kpi-sub">Hôm nay: <b id="val-today-visits">0</b> lượt</div>
+      </div>
+
+      <div class="kpi-card chats">
+        <div class="kpi-title">💬 Lượt Luyện Nói AI</div>
+        <div class="kpi-value" id="val-total-chats" style="color:var(--accent-green);">0</div>
+        <div class="kpi-sub">Hôm nay: <b id="val-today-chats">0</b> câu</div>
+      </div>
+
+      <div class="kpi-card lang-en">
+        <div class="kpi-title">🇬🇧 Học Tiếng Anh</div>
+        <div class="kpi-value" id="val-chats-en" style="color:#38bdf8;">0</div>
+        <div class="kpi-sub">Chiếm <span id="val-percent-en">0%</span> tổng hội thoại</div>
+      </div>
+
+      <div class="kpi-card lang-zh">
+        <div class="kpi-title">🇨🇳 Học Tiếng Trung</div>
+        <div class="kpi-value" id="val-chats-zh" style="color:var(--accent-rose);">0</div>
+        <div class="kpi-sub">Chiếm <span id="val-percent-zh">0%</span> tổng hội thoại</div>
+      </div>
+    </div>
+
+    <!-- PANELS ROW -->
+    <div class="section-grid">
+      <!-- TOP SCENARIOS -->
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <span>🏆 Tình Huống Được Luyện Tập Nhiều Nhất</span>
+        </div>
+        <div id="scenarios-list">
+          <p style="color:var(--text-muted); font-size:0.85rem;">Đang tải dữ liệu...</p>
+        </div>
+      </div>
+
+      <!-- DEVICE STATS -->
+      <div class="dashboard-panel">
+        <div class="panel-header">
+          <span>📱 Thiết Bị Người Học Sử Dụng</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top:8px;">
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+              <span>📱 Điện thoại di động (Mobile)</span>
+              <b id="val-mobile-count">0</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); height:8px; border-radius:4px; overflow:hidden;">
+              <div id="bar-mobile" style="background:#3b82f6; height:100%; width:0%; transition:width 0.5s;"></div>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:6px;">
+              <span>💻 Máy tính để bàn (Desktop)</span>
+              <b id="val-desktop-count">0</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.06); height:8px; border-radius:4px; overflow:hidden;">
+              <div id="bar-desktop" style="background:#10b981; height:100%; width:0%; transition:width 0.5s;"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; font-size:0.8rem; color:var(--text-muted);">
+            🕒 Lần hoạt động gần nhất: <b id="val-last-active" style="color:#fff;">--</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE ACTIVITY STREAM -->
+    <div class="dashboard-panel" style="margin-bottom:20px;">
+      <div class="panel-header" style="justify-content:space-between;">
+        <span><span class="live-dot"></span> Nhật Ký Hoạt Động Thời Gian Thực (Ẩn danh & Bảo mật)</span>
+        <small style="color:var(--text-muted); font-size:0.75rem;">Tự động cập nhật mỗi 10 giây</small>
+      </div>
+      <div class="activity-list" id="activity-list">
+        <p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào được ghi nhận.</p>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="status-footer">
+      <span class="live-dot"></span> Hệ thống đang giám sát trực tuyến • Dữ liệu lưu trữ bảo mật 100%
+    </footer>
+  </div>
+
+  <script>
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        const data = await res.json();
+
+        // KPIs
+        document.getElementById('val-total-visits').textContent = (data.total_visits || 0).toLocaleString();
+        document.getElementById('val-today-visits').textContent = (data.visits_today || 0).toLocaleString();
+        document.getElementById('val-total-chats').textContent = (data.total_chats || 0).toLocaleString();
+        document.getElementById('val-today-chats').textContent = (data.chats_today || 0).toLocaleString();
+
+        const en = data.chats_by_lang?.en || 0;
+        const zh = data.chats_by_lang?.zh || 0;
+        const totalLang = en + zh || 1;
+        document.getElementById('val-chats-en').textContent = en.toLocaleString();
+        document.getElementById('val-percent-en').textContent = Math.round((en / totalLang) * 100) + '%';
+        document.getElementById('val-chats-zh').textContent = zh.toLocaleString();
+        document.getElementById('val-percent-zh').textContent = Math.round((zh / totalLang) * 100) + '%';
+
+        // Devices
+        const mobile = data.devices?.mobile || 0;
+        const desktop = data.devices?.desktop || 0;
+        const totalDev = mobile + desktop || 1;
+        document.getElementById('val-mobile-count').textContent = mobile + ' (' + Math.round((mobile / totalDev) * 100) + '%)';
+        document.getElementById('val-desktop-count').textContent = desktop + ' (' + Math.round((desktop / totalDev) * 100) + '%)';
+        document.getElementById('bar-mobile').style.width = Math.round((mobile / totalDev) * 100) + '%';
+        document.getElementById('bar-desktop').style.width = Math.round((desktop / totalDev) * 100) + '%';
+        document.getElementById('val-last-active').textContent = data.last_active || '--';
+
+        // Scenarios
+        const scenContainer = document.getElementById('scenarios-list');
+        const scenarios = data.chats_by_scenario || {};
+        const scenEntries = Object.entries(scenarios).sort((a, b) => b[1] - a[1]);
+        if (scenEntries.length === 0) {
+          scenContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:6px;">Chưa có dữ liệu hội thoại.</p>';
+        } else {
+          scenContainer.innerHTML = scenEntries.map(([id, cnt]) => `
+            <div class="scenario-item">
+              <span>💬 <b>${id}</b></span>
+              <span class="scenario-count">${cnt} lượt</span>
+            </div>
+          `).join('');
+        }
+
+        // Recent Activity
+        const actContainer = document.getElementById('activity-list');
+        const activities = data.recent_activities || [];
+        if (activities.length === 0) {
+          actContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào.</p>';
+        } else {
+          actContainer.innerHTML = activities.map(act => {
+            const isVisit = act.type === 'visit';
+            return `
+              <div class="activity-item">
+                <span class="activity-time">${act.time}</span>
+                <span class="activity-tag ${isVisit ? 'tag-visit' : 'tag-chat'}">${isVisit ? 'Truy cập' : 'Hội thoại'}</span>
+                <span class="activity-desc">${act.desc}</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Lỗi tải thống kê:', err);
+      }
+    }
+
+    document.getElementById('btn-refresh').addEventListener('click', loadStats);
+    loadStats();
+    setInterval(loadStats, 10000); // Tự động làm mới mỗi 10 giây
+  </script>
+</body>
+</html>
