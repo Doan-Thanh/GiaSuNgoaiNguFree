@@ -306,6 +306,19 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       scenariosListContainer.appendChild(card);
     });
+
+    if (scenariosList.length <= 1) {
+      const upcomingCard = document.createElement('div');
+      upcomingCard.className = 'scenario-card-item';
+      upcomingCard.style.cssText = 'border: 1px dashed rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.05); cursor: default; opacity: 0.9; margin-top: 10px;';
+      upcomingCard.innerHTML = `
+        <div class="scenario-card-title" style="color: #38bdf8; font-size: 0.95rem;">🚀 Tình huống theo chủ đề (Đang hoàn thiện)</div>
+        <div class="scenario-card-desc" style="font-size: 0.8rem; line-height: 1.45; color: #94a3b8; margin-top: 4px;">
+          Các chủ đề giao tiếp thực tế (Gọi đồ uống, Mua sắm mặc cả, Đặt phòng khách sạn, Phỏng vấn xin việc, Sân bay...) đang được tác giả hệ thống hóa bài bản và sẽ sớm cập nhật trong các phiên bản tiếp theo.
+        </div>
+      `;
+      scenariosListContainer.appendChild(upcomingCard);
+    }
   }
 
   function selectScenario(scenario) {
