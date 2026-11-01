@@ -1,6 +1,7 @@
-# Bảo vệ khóa API cá nhân
+# Bảo vệ khóa API cá nhân & file tác vụ nội bộ
 config.json
 runtime_port.json
+DAY_LEN_GITHUB.bat
 
 # Python cache & virtualenv
 __pycache__/
