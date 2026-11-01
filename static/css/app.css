@@ -699,34 +699,13 @@ body.mobile-app-body {
 .author-sig {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: flex-end;
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px dashed rgba(255, 255, 255, 0.12);
-  font-size: 0.83rem;
+  font-size: 0.85rem;
   color: #cbd5e1;
-}
-
-.github-badge-link {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  transition: all 0.2s ease;
-}
-
-.github-badge-link:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
 }
 
 /* SHARE SECTION */
