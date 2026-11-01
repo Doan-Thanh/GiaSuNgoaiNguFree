@@ -2,6 +2,8 @@
 config.json
 runtime_port.json
 DAY_LEN_GITHUB.bat
+LAM_VIEC_VOI_AGY.bat
+*.bat
 
 # Python cache & virtualenv
 __pycache__/

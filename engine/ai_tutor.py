@@ -8,6 +8,19 @@ logger = logging.getLogger("ThanhBooksAI.Tutor")
 SCENARIOS = {
     "en": [
         {
+            "id": "free_chat",
+            "title": "💬 Trò Chuyện Tự Do (Casual Daily Talk)",
+            "description": "Tán gẫu thoải mái về sở thích, âm nhạc, phim ảnh, văn hóa cùng bạn bản xứ.",
+            "botRole": "Người bạn bản xứ vui tính đến từ California",
+            "initialMessage": "Hey! How's your day going so far? Doing anything fun today?",
+            "initialTranslation": "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Có làm gì vui không?",
+            "initialSuggestions": [
+                "It's going great! Just relaxing with some music and practicing English.",
+                "A bit busy with work today, but looking forward to the weekend!",
+                "Not much, just trying out this new AI app to improve my speaking skills."
+            ]
+        },
+        {
             "id": "cafe",
             "title": "☕ Gọi Đồ Uống Tại Quán Cà Phê (Ordering at a Café)",
             "description": "Thực hành gọi cà phê, hỏi giá, tùy chỉnh lượng đường/đá tại quán cà phê Mỹ.",
@@ -123,22 +136,23 @@ SCENARIOS = {
                 "Excuse me, the soup was served lukewarm. Could you please heat it up?",
                 "Everything is wonderful, thank you! Could we also get the dessert menu?"
             ]
-        },
-        {
-            "id": "free_chat",
-            "title": "💬 Trò Chuyện Tự Do (Casual Daily Talk)",
-            "description": "Tán gẫu thoải mái về sở thích, âm nhạc, phim ảnh, văn hóa cùng bạn bản xứ.",
-            "botRole": "Người bạn bản xứ vui tính đến từ California",
-            "initialMessage": "Hey! How's your day going so far? Doing anything fun today?",
-            "initialTranslation": "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Có làm gì vui không?",
-            "initialSuggestions": [
-                "It's going great! Just relaxing with some music and practicing English.",
-                "A bit busy with work today, but looking forward to the weekend!",
-                "Not much, just trying out this new AI app to improve my speaking skills."
-            ]
         }
     ],
     "zh": [
+        {
+            "id": "free_zh",
+            "title": "💬 Tán Gẫu Đời Thường Tiếng Trung (日常闲聊)",
+            "description": "Luyện phản xạ giao tiếp tự nhiên, luyện thanh điệu và ngữ pháp tiếng Trung cơ bản.",
+            "botRole": "Bạn học người Trung Quốc vui vẻ, kiên nhẫn",
+            "initialHanzi": "你好啊！很高兴和你练习中文。你学中文多久了？平时最喜欢做什么？",
+            "initialPinyin": "Nǐ hǎo a! Hěn gāoxìng hé nǐ liànxí Zhōngwén. Nǐ xué Zhōngwén duōjiǔ le? Píngshí zuì xǐhuan zuò shénme?",
+            "initialTranslation": "Chào bạn nhé! Rất vui được cùng bạn luyện tập tiếng Trung. Bạn học tiếng Trung được bao lâu rồi? Bình thường bạn thích làm gì nhất?",
+            "initialSuggestions": [
+                "你好！我学中文大概半年了，平时喜欢听中文歌和看电影 (Nǐ hǎo! Wǒ xué Zhōngwén dàgài bàn nián le, píngshí xǐhuan tīng Zhōngwén gē hé kàn diànyǐng - Chào bạn! Mình học tiếng Trung khoảng nửa năm rồi, hay nghe nhạc và xem phim)",
+                "我主要是为了去中国旅游和工作，声调对我来说有点难 (Wǒ zhǔyào shì wèile qù Zhōngguó lǚyóu hé gōngzuò, shēngdiào duì wǒ láishuō yǒudiǎn nán - Mình học để đi du lịch và làm việc, thanh điệu hơi khó với mình)",
+                "今天想跟你聊聊中国的美食，你家乡有什么好吃的？ (Jīntiān xiǎng gēn nǐ liáoliao Zhōngguó de měishí, nǐ jiāxiāng yǒu shénme hǎochī de? - Hôm nay muốn buôn chuyện ẩm thực với bạn, quê bạn có món gì ngon?)"
+            ]
+        },
         {
             "id": "taobao",
             "title": "🛍️ Mua Sắm & Mặc Cả Taobao / 1688 (逛街砍价)",
@@ -263,20 +277,6 @@ SCENARIOS = {
                 "你好！请问去高铁站坐地铁几号线最快？ (Nǐ hǎo! Qǐngwèn qù gāotiězhàn zuò dìtiě jǐ hào xiàn zuì kuài? - Chào bạn! Đi ga tàu cao tốc bắt tàu điện ngầm tuyến số mấy nhanh nhất?)",
                 "请问自动取票机在哪里？需要刷身份证吗？ (Qǐngwèn zìdòng qǔpiàojī zài nǎlǐ? Xūyào shuā shēnfènzhèng ma? - Máy lấy vé tự động ở đâu ạ? Có cần quẹt căn cước không?)",
                 "太感谢了！进站安检大概需要排队多久？ (Tài gǎnxiè le! Jìnzhàn ānjiǎn dàgài xūyào páiduì duōjiǔ? - Cảm ơn bạn nhiều! Xếp hàng qua cửa kiểm tra an ninh mất tầm bao lâu?)"
-            ]
-        },
-        {
-            "id": "free_zh",
-            "title": "💬 Tán Gẫu Đời Thường Tiếng Trung (日常闲聊)",
-            "description": "Luyện phản xạ giao tiếp tự nhiên, luyện thanh điệu và ngữ pháp tiếng Trung cơ bản.",
-            "botRole": "Bạn học người Trung Quốc vui vẻ, kiên nhẫn",
-            "initialHanzi": "你好啊！很高兴和你练习中文。你学中文多久了？平时最喜欢做什么？",
-            "initialPinyin": "Nǐ hǎo a! Hěn gāoxìng hé nǐ liànxí Zhōngwén. Nǐ xué Zhōngwén duōjiǔ le? Píngshí zuì xǐhuan zuò shénme?",
-            "initialTranslation": "Chào bạn nhé! Rất vui được cùng bạn luyện tập tiếng Trung. Bạn học tiếng Trung được bao lâu rồi? Bình thường bạn thích làm gì nhất?",
-            "initialSuggestions": [
-                "你好！我学中文大概半年了，平时喜欢听中文歌和看电影 (Nǐ hǎo! Wǒ xué Zhōngwén dàgài bàn nián le, píngshí xǐhuan tīng Zhōngwén gē hé kàn diànyǐng - Chào bạn! Mình học tiếng Trung khoảng nửa năm rồi, hay nghe nhạc và xem phim)",
-                "我主要是为了去中国旅游和工作，声调对我来说有点难 (Wǒ zhǔyào shì wèile qù Zhōngguó lǚyóu hé gōngzuò, shēngdiào duì wǒ láishuō yǒudiǎn nán - Mình học để đi du lịch và làm việc, thanh điệu hơi khó với mình)",
-                "今天想跟你聊聊中国的美食，你家乡有什么好吃的？ (Jīntiān xiǎng gēn nǐ liáoliao Zhōngguó de měishí, nǐ jiāxiāng yǒu shénme hǎochī de? - Hôm nay muốn buôn chuyện ẩm thực với bạn, quê bạn có món gì ngon?)"
             ]
         }
     ]

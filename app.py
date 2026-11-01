@@ -94,7 +94,7 @@ async def get_scenarios(lang: str = "en"):
 async def handle_chat(payload: dict = Body(...)):
     user_text = payload.get("userText", "").strip()
     lang = payload.get("lang", "en")
-    scenario_id = payload.get("scenarioId", "cafe" if lang == "en" else "taobao")
+    scenario_id = payload.get("scenarioId", "free_chat" if lang == "en" else "free_zh")
     voice = payload.get("voice")
     history = payload.get("history", [])
     turn_count = payload.get("turnCount", 1)
@@ -137,7 +137,7 @@ async def handle_chat(payload: dict = Body(...)):
 @app.post("/api/suggestions/refresh")
 async def refresh_suggestions(payload: dict = Body(...)):
     lang = payload.get("lang", "en")
-    scenario_id = payload.get("scenarioId", "cafe" if lang == "en" else "taobao")
+    scenario_id = payload.get("scenarioId", "free_chat" if lang == "en" else "free_zh")
     history = payload.get("history", [])
 
     cfg = load_config()

@@ -426,8 +426,8 @@ document.addEventListener('DOMContentLoaded', () => {
       chip.style.gap = '6px';
 
       chip.innerHTML = `
-        <span class="chip-speaker-btn" title="Nghe giọng đọc mẫu câu này" style="cursor:pointer; font-size:0.95rem; opacity:0.85; padding:2px 4px; border-radius:4px; transition:opacity 0.2s;">🔊</span>
-        <span class="chip-text" title="Bấm để gửi ngay" style="cursor:pointer;">${escapeHtml(item)}</span>
+        <span class="chip-speaker-btn" title="Nghe giọng đọc mẫu câu này" style="cursor:pointer; font-size:1.15rem; opacity:0.9; padding:2px 6px; border-radius:4px; transition:opacity 0.2s;">🔊</span>
+        <span class="chip-text" title="Bấm để gửi ngay" style="cursor:pointer; font-size:1.02rem; font-weight:500; letter-spacing:0.2px;">${escapeHtml(item)}</span>
       `;
 
       // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu để luyện đọc theo
