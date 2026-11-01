@@ -1,0 +1,16 @@
+# Bảo vệ khóa API cá nhân
+config.json
+runtime_port.json
+
+# Python cache & virtualenv
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# OS and logs
+*.log
+.DS_Store
+Thumbs.db

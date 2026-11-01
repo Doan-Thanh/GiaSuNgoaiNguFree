@@ -1,0 +1,12 @@
+{
+  "geminiApiKey": "",
+  "geminiModel": "gemini-3.5-flash-lite",
+  "currentLang": "zh",
+  "voiceEn": "en-US-JennyNeural",
+  "voiceZh": "zh-CN-XiaoxiaoNeural",
+  "showPinyin": true,
+  "showTranslation": true,
+  "donateBank": "ACB (Ngân hàng Á Châu)",
+  "donateAcc": "8335897",
+  "donateName": "DOAN DUC THANH"
+}

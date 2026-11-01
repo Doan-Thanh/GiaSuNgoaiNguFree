@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gia Sư Ngoại Ngữ Free — Luyện Nói Tiếng Anh & Tiếng Trung 1-Kèm-1</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="mobile-app-body">
+  <div class="app-container">
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-badge">⚡</span>
+        <div>
+          <h1 class="brand-name">Gia Sư Ngoại Ngữ</h1>
+          <span class="brand-tag">Free 1-Kèm-1 • by ThanhBooks</span>
+        </div>
+      </div>
+
+      <!-- Language Switcher -->
+      <div class="lang-switch-group">
+        <button class="lang-btn active" data-lang="en">
+          <span class="flag">🇬🇧</span> Tiếng Anh
+        </button>
+        <button class="lang-btn" data-lang="zh">
+          <span class="flag">🇨🇳</span> Tiếng Trung
+        </button>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:6px;">
+        <button class="btn-icon" id="btn-open-donate" title="Mời tác giả 1 ly cà phê ☕" style="font-size:1.15rem; background:rgba(245, 158, 11, 0.15); border:1px solid rgba(245, 158, 11, 0.35);">☕</button>
+        <button class="btn-icon" id="btn-open-settings" title="Cài đặt">⚙️</button>
+      </div>
+    </header>
+
+    <!-- ASSISTANT TOOLBAR -->
+    <div class="assistant-bar">
+      <div class="scenario-pill" id="current-scenario-title">
+        ☕ Gọi Cà Phê
+      </div>
+      <div class="helper-toggles">
+        <button class="toggle-pill active" id="toggle-pinyin" style="display:none;" title="Bật/Tắt Pinyin">
+          <span class="toggle-icon">Aa</span> Pinyin
+        </button>
+        <button class="toggle-pill active" id="toggle-translation" title="Bật/Tắt Bản Dịch">
+          <span class="toggle-icon">🌐</span> Dịch
+        </button>
+        <button class="btn-change-scenario" id="btn-show-scenarios">Đổi Tình Huống ▾</button>
+      </div>
+    </div>
+
+    <!-- CHAT MESSAGES AREA -->
+    <main class="chat-area" id="chat-messages">
+      <!-- Welcome card or initial prompt -->
+    </main>
+
+    <!-- QUICK SUGGESTIONS CAROUSEL -->
+    <div class="suggestions-bar" id="suggestions-container" style="display:none;">
+      <div class="suggestions-header">
+        <span class="suggestions-label">💡 Gợi ý câu nói (Bấm chọn hoặc bật Mic 🎙️ đọc theo):</span>
+        <button class="btn-refresh-chips" id="btn-refresh-suggestions" title="Đổi các câu gợi ý khác">🔄 Đổi gợi ý khác</button>
+      </div>
+      <div class="suggestions-scroll" id="suggestions-list"></div>
+    </div>
+
+    <!-- VOICE & INPUT CONTROLS -->
+    <footer class="input-controls">
+      <div class="recording-indicator" id="recording-status" style="display:none;">
+        <span class="pulse-dot"></span>
+        <span id="recording-text">Đang lắng nghe bạn nói... Hãy phát âm tự nhiên nhé!</span>
+      </div>
+
+      <div class="controls-row">
+        <div class="text-input-wrapper">
+          <input type="text" id="input-custom-text" placeholder="Nhập câu tiếng Anh hoặc bấm Mic để nói..." autocomplete="off">
+          <button class="btn-send-text" id="btn-send-text" title="Gửi câu">➔</button>
+        </div>
+
+        <button class="btn-mic-main" id="btn-mic" title="Nhấn để bắt đầu nói">
+          <span class="mic-icon">🎙️</span>
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: CHỌN TÌNH HUỐNG HỘI THOẠI -->
+  <div class="modal-backdrop" id="modal-scenarios" style="display:none;">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 id="modal-scenario-heading">Chọn Tình Huống Luyện Nói</h3>
+        <button class="btn-close-modal" id="btn-close-scenarios">✕</button>
+      </div>
+      <div class="scenarios-list" id="scenarios-list-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CÀI ĐẶT API & GIỌNG ĐỌC -->
+  <div class="modal-backdrop" id="modal-settings" style="display:none;">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>⚙️ Cài Đặt Gia Sư AI</h3>
+        <button class="btn-close-modal" id="btn-close-settings">✕</button>
+      </div>
+      <div class="settings-content">
+        <div class="form-item">
+          <label>Google Gemini API Key (Hoàn toàn miễn phí):</label>
+          <input type="password" id="input-api-key" placeholder="AIzaSy...">
+          <small class="helper-text">
+            Khóa API miễn phí từ <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio ↗</a>. Nếu chưa nhập, app sẽ chạy ở chế độ mô phỏng thông minh.
+          </small>
+        </div>
+
+        <div class="form-item">
+          <label>Mô Hình AI (Gemini Model):</label>
+          <select id="select-model" class="custom-select">
+            <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Khuyến nghị: Phản hồi siêu tốc, 100% Free)</option>
+            <option value="gemini-3.5-flash">gemini-3.5-flash (Thông minh, ngữ cảnh sâu, 100% Free)</option>
+            <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Bản Lite cập nhật mới nhất, 100% Free)</option>
+          </select>
+          <small class="helper-text">
+            Tất cả các model Flash đều thuộc gói Miễn Phí của Google (1.500 lượt chat/ngày, 0 VNĐ).
+          </small>
+        </div>
+
+        <div class="form-item">
+          <label>Giọng Đọc Tiếng Anh:</label>
+          <select id="select-voice-en" class="custom-select"></select>
+        </div>
+
+        <div class="form-item">
+          <label>Giọng Đọc Tiếng Trung:</label>
+          <select id="select-voice-zh" class="custom-select"></select>
+        </div>
+
+        <button class="btn-save-settings" id="btn-save-settings">Lưu Cài Đặt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MỜI CÀ PHÊ TÁC GIẢ -->
+  <div class="modal-backdrop" id="modal-donate" style="display:none;">
+    <div class="modal-sheet" style="text-align: center; max-width: 420px;">
+      <div class="modal-header">
+        <h3>☕ Mời Tác Giả 1 Ly Cà Phê</h3>
+        <button class="btn-close-modal" id="btn-close-donate">✕</button>
+      </div>
+      <div class="settings-content" style="padding: 18px 8px;">
+        <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+          Ứng dụng <b>Gia Sư Ngoại Ngữ Free</b> được phát triển bởi <b>ThanhBooks (Đoàn Đức Thành)</b> và chia sẻ hoàn toàn phi lợi nhuận. Nếu ứng dụng này giúp ích cho bạn trong việc luyện nói Tiếng Anh & Tiếng Trung mỗi ngày, hãy tặng tác giả một ly cà phê ấm lòng nhé! ❤️
+        </p>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 16px;">
+          <div style="font-size: 2.2rem; margin-bottom: 6px;">☕✨</div>
+          <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">Quét mã QR chuyển khoản ủng hộ</div>
+          
+          <img src="/static/img/qr_donate.png" id="qr-donate-img" onerror="this.style.display='none';" style="max-width: 210px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); margin: 0 auto; display: block;" alt="Mã QR Donate">
+          
+          <div id="qr-fallback-info" style="text-align: left; background: rgba(0,0,0,0.3); padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; line-height: 1.8; margin-top: 14px;">
+            <div>🏦 <b>Ngân hàng:</b> <span id="donate-bank">ACB (Ngân hàng Á Châu)</span></div>
+            <div>💳 <b>Số tài khoản:</b> <b style="color:#38bdf8; font-size:1.05rem;" id="donate-acc">8335897</b></div>
+            <div>👤 <b>Chủ tài khoản:</b> <span id="donate-name">DOAN DUC THANH</span></div>
+            <div>💬 <b>Nội dung:</b> <code>Thanhbooks - Cafe ung ho</code></div>
+          </div>
+        </div>
+
+        <button class="btn-save-settings" id="btn-done-donate" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff;">Cảm Ơn Bạn Rất Nhiều! 🙏</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
