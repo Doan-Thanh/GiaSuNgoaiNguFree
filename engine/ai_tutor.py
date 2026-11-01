@@ -32,6 +32,54 @@ SCENARIOS = {
             "initialTranslation": "Cảm ơn bạn đã dành thời gian trao đổi với tôi hôm nay. Bạn có thể giới thiệu ngắn gọn về bản thân được không?"
         },
         {
+            "id": "airport",
+            "title": "✈️ Phỏng Vấn Hải Quan Sân Bay (Airport Immigration)",
+            "description": "Trả lời nhân viên hải quan Mỹ/Anh về mục đích chuyến đi, nơi lưu trú, vé khứ hồi.",
+            "botRole": "Sĩ quan hải quan sân bay quốc tế JFK New York",
+            "initialMessage": "Good morning. Passport and declaration form, please. What is the primary purpose of your visit to the United States?",
+            "initialTranslation": "Chào buổi sáng. Xin vui lòng xuất trình hộ chiếu và tờ khai. Mục đích chính chuyến đi đến Mỹ của bạn là gì?"
+        },
+        {
+            "id": "standup",
+            "title": "📊 Họp Standup & Báo Cáo Với Sếp (Daily Standup Meeting)",
+            "description": "Báo cáo tiến độ công việc hôm qua, dự định hôm nay và nêu khó khăn cần hỗ trợ.",
+            "botRole": "Trưởng dự án kỹ thuật (Project Lead) người Mỹ vui vẻ, thực tế",
+            "initialMessage": "Morning everyone! Let's do a quick round for today's standup. What did you finish yesterday and what are you tackling today?",
+            "initialTranslation": "Chào buổi sáng cả đội! Chúng ta cùng điểm nhanh cuộc họp hôm nay nhé. Hôm qua bạn đã xong việc gì và hôm nay sẽ giải quyết việc gì?"
+        },
+        {
+            "id": "refund",
+            "title": "🛒 Đổi Trả Hàng & Hoàn Tiền (Store Return & Refund)",
+            "description": "Phàn nàn lịch sự về sản phẩm lỗi/sai size tại cửa hàng, yêu cầu hoàn tiền vào thẻ.",
+            "botRole": "Nhân viên quầy chăm sóc khách hàng tại trung tâm thương mại",
+            "initialMessage": "Hi there! Welcome to Customer Service. Are you returning or exchanging an item today?",
+            "initialTranslation": "Xin chào! Chào mừng bạn đến quầy Chăm sóc khách hàng. Hôm nay bạn muốn trả hàng hay đổi sang món khác ạ?"
+        },
+        {
+            "id": "clinic",
+            "title": "🩺 Đi Khám Bệnh & Nhà Thuốc (Doctor's Clinic & Pharmacy)",
+            "description": "Miêu tả triệu chứng sức khỏe, cảm cúm, đau đầu cho bác sĩ và hỏi cách dùng thuốc.",
+            "botRole": "Bác sĩ gia đình tận tâm tại phòng khám",
+            "initialMessage": "Good afternoon. Please take a seat. What seems to be bothering you today?",
+            "initialTranslation": "Chào buổi chiều. Mời bạn ngồi. Hôm nay bạn cảm thấy khó chịu ở đâu trong người?"
+        },
+        {
+            "id": "cinema",
+            "title": "🎬 Mua Vé Xem Phim & Bắp Nước (At the Cinema)",
+            "description": "Chọn phim, chọn suất chiếu, chọn ghế giữa rạp và gọi combo bắp phô mai nước ngọt.",
+            "botRole": "Nhân viên bán vé rạp chiếu phim AMC",
+            "initialMessage": "Hey! Welcome to AMC Cinema. Which movie are you looking to watch today, and how many tickets?",
+            "initialTranslation": "Xin chào! Chào mừng bạn đến rạp phim AMC. Hôm nay bạn muốn xem phim nào và cần mua mấy vé?"
+        },
+        {
+            "id": "complaint",
+            "title": "🍽️ Phàn Nàn Lịch Sự Tại Nhà Hàng (Dining & Polite Feedback)",
+            "description": "Báo bồi bàn món ăn bị nguội hoặc đem nhầm món, yêu cầu làm lại và xin hóa đơn.",
+            "botRole": "Quản lý nhà hàng Âu chu đáo",
+            "initialMessage": "Good evening. How is everything tasting tonight? Is your steak cooked to your liking?",
+            "initialTranslation": "Chào buổi tối. Các món ăn tối nay có vừa miệng quý khách không ạ? Miếng bít tết đã đúng độ chín như ý quý khách chưa?"
+        },
+        {
             "id": "free_chat",
             "title": "💬 Trò Chuyện Tự Do (Casual Daily Talk)",
             "description": "Tán gẫu thoải mái về sở thích, âm nhạc, phim ảnh, văn hóa cùng bạn bản xứ.",
@@ -60,8 +108,62 @@ SCENARIOS = {
             "initialTranslation": "Xin chào quý khách! Chào mừng đến Toàn Tụ Đức. Xin hỏi quý khách đi mấy người? Hôm nay muốn dùng món đặc sản gì ạ?"
         },
         {
+            "id": "factory",
+            "title": "🏭 Đàm Phán Xưởng & Nhà Máy Trung Quốc (工厂询盘谈判)",
+            "description": "Hỏi giá sỉ số lượng lớn, yêu cầu gửi mẫu (sample), tiến độ sản xuất và thanh toán.",
+            "botRole": "Giám đốc kinh doanh xưởng gia công tại Thâm Quyến",
+            "initialHanzi": "老板你好！很高兴认识您。请问您看中哪款产品？大概需要多少起订量（MOQ）？",
+            "initialPinyin": "Lǎobǎn nǐ hǎo! Hěn gāoxìng rènshi nín. Qǐngwèn nín kànzhòng nǎ kuǎn chǎnpǐn? Dàgài xūyào duōshao qǐdìngliàng (MOQ)?",
+            "initialTranslation": "Chào ông chủ! Rất vui được biết bạn. Xin hỏi bạn đang ưng mẫu sản phẩm nào? Số lượng đặt hàng tối thiểu dự kiến khoảng bao nhiêu?"
+        },
+        {
+            "id": "didi",
+            "title": "🚕 Đi Taxi / Bắt Xe Didi & Chỉ Đường (打车与指路)",
+            "description": "Xác nhận điểm đón xe, bảo tài xế đi đường cao tốc, rẽ trái/phải, dừng xe tính tiền.",
+            "botRole": "Tài xế Didi nhiệt tình tại Thượng Hải",
+            "initialHanzi": "师傅到了！尾号8897对吧？看定位是去虹桥高铁站，走高架桥比较快，可以吗？",
+            "initialPinyin": "Shīfu dào le! Wěihào bābājiǔqī duì ba? Kàn dìngwèi shì qù Hóngqiáo Gāotiězhàn, zǒu gāojiàqiáo bǐjiào kuài, kěyǐ ma?",
+            "initialTranslation": "Tài xế tới rồi! 4 số cuối điện thoại là 8897 đúng không? Điểm đến là ga tàu Hồng Kiều, đi cầu vượt trên cao sẽ nhanh hơn, được không bạn?"
+        },
+        {
+            "id": "haidilao",
+            "title": "🍲 Ăn Lẩu Haidilao & Gọi Trà Sữa (吃火锅喝奶茶)",
+            "description": "Chọn nước lẩu cà chua/cay tê, pha nước chấm, chọn độ ngọt và đá trà sữa.",
+            "botRole": "Phục vụ viên Haidilao chu đáo",
+            "initialHanzi": "欢迎光临海底捞！请问今天锅底想要番茄牛尾的还是麻辣清油的？先给您倒杯酸梅汤吧！",
+            "initialPinyin": "Huānyíng guānglín Hǎidǐlāo! Qǐngwèn jīntiān guōdǐ xiǎng yào fānqié niúwěi de háishì málà qīngyóu de? Xiān gěi nín dào bēi suānméitāng ba!",
+            "initialTranslation": "Chào mừng đến Haidilao! Hôm nay bạn muốn dùng nước lẩu đuôi bò cà chua hay lẩu cay thanh dầu? Để em rót cho bạn cốc nước mơ chua giải nhiệt trước nhé!"
+        },
+        {
+            "id": "pharmacy",
+            "title": "🏥 Đi Hiệu Thuốc & Mua Thuốc (药店问药)",
+            "description": "Miêu tả triệu chứng cảm sốt, đau họng, đau dạ dày và hỏi liều lượng uống thuốc.",
+            "botRole": "Dược sĩ tư vấn tại nhà thuốc Bắc Kinh",
+            "initialHanzi": "你好！看你脸色不太好，是哪里不舒服？发烧还是嗓子疼？",
+            "initialPinyin": "Nǐ hǎo! Kàn nǐ liǎnsè bú tài hǎo, shì nǎlǐ bù shūfu? Fāshāo háishì sǎngzi téng?",
+            "initialTranslation": "Chào bạn! Thấy sắc mặt bạn hơi nhợt nhạt, bạn đang khó chịu ở đâu? Có bị sốt hay đau họng không?"
+        },
+        {
+            "id": "rent",
+            "title": "🏢 Thuê Căn Hộ & Phòng Trọ (租房看房)",
+            "description": "Hỏi giá thuê phòng theo tháng, tiền đặt cọc, tiền điện nước, kiểm tra nội thất.",
+            "botRole": "Môi giới nhà đất nhiệt tình tại Quảng Châu",
+            "initialHanzi": "你好！这套一室一厅采光非常好，家具家电全配齐，押一付一，想今天实地看看房吗？",
+            "initialPinyin": "Nǐ hǎo! Zhè tào yíshìyìtīng cǎiguāng fēicháng hǎo, jiājù jiādiàn quán pèiqí, yā yī fù yī, xiǎng jīntiān shídì kànkan fáng ma?",
+            "initialTranslation": "Chào bạn! Căn 1 phòng ngủ 1 phòng khách này đón ánh sáng cực tốt, đầy đủ nội thất đồ điện, cọc 1 đóng 1 tháng, bạn có muốn qua xem nhà trực tiếp hôm nay không?"
+        },
+        {
+            "id": "salon",
+            "title": "💇 Cắt Tóc & Tạo Kiểu Salon (理发做造型)",
+            "description": "Yêu cầu thợ cắt tóc chỉ tỉa bớt ngọn tóc, không cắt quá ngắn, nhuộm màu tự nhiên.",
+            "botRole": "Nhà tạo mẫu tóc chuyên nghiệp tại Salon",
+            "initialHanzi": "帅哥/美女请坐！今天想怎么剪？是要换个新发型还是只稍微修剪一下？",
+            "initialPinyin": "Shuàigē/Měinǚ qǐng zuò! Jīntiān xiǎng zěnme jiǎn? Shì yào huàn ge xīn fàxíng háishì zhǐ shāowēi xiūjiǎn yíxià?",
+            "initialTranslation": "Mời bạn ngồi! Hôm nay bạn muốn cắt thế nào? Muốn đổi kiểu tóc mới hay chỉ tỉa gọn lại một chút thôi?"
+        },
+        {
             "id": "travel",
-            "title": "🚄 Du Lịch & Hỏi Đường Đi Tàu Cao Tốc (旅行问路)",
+            "title": "🚄 Du Lịch & Hỏi Đường Ga Tàu (旅行问路)",
             "description": "Hỏi đường đến ga tàu cao tốc, mua vé tàu, hỏi cửa kiểm soát vé.",
             "botRole": "Người dân bản địa nhiệt tình tại Thượng Hải",
             "initialHanzi": "你好！看你在看地图，是去高铁站吗？需要我帮忙指路吗？",
@@ -73,9 +175,9 @@ SCENARIOS = {
             "title": "💬 Tán Gẫu Đời Thường Tiếng Trung (日常闲聊)",
             "description": "Luyện phản xạ giao tiếp tự nhiên, luyện thanh điệu và ngữ pháp tiếng Trung cơ bản.",
             "botRole": "Bạn học người Trung Quốc vui vẻ, kiên nhẫn",
-            "initialHanzi": "你好啊！很高兴和你练习中文。你学中文多久了？",
-            "initialPinyin": "Nǐ hǎo a! Hěn gāoxìng hé nǐ liànxí Zhōngwén. Nǐ xué Zhōngwén duōjiǔ le?",
-            "initialTranslation": "Chào bạn nhé! Rất vui được cùng bạn luyện tập tiếng Trung. Bạn học tiếng Trung được bao lâu rồi?"
+            "initialHanzi": "你好啊！很高兴和你练习中文。你学中文多久了？平时最喜欢做什么？",
+            "initialPinyin": "Nǐ hǎo a! Hěn gāoxìng hé nǐ liànxí Zhōngwén. Nǐ xué Zhōngwén duōjiǔ le? Píngshí zuì xǐhuan zuò shénme?",
+            "initialTranslation": "Chào bạn nhé! Rất vui được cùng bạn luyện tập tiếng Trung. Bạn học tiếng Trung được bao lâu rồi? Bình thường bạn thích làm gì nhất?"
         }
     ]
 }

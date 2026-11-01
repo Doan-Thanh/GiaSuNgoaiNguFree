@@ -414,20 +414,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     suggestionsList.innerHTML = '';
     suggestions.forEach(item => {
-      const chip = document.createElement('button');
+      let cleanMsg = item;
+      // Xử lý cả dấu ngoặc đơn nửa góc '(' và dấu ngoặc đơn toàn góc '（' của tiếng Trung
+      if (cleanMsg.includes('（')) {
+        cleanMsg = cleanMsg.split('（')[0].trim();
+      }
+      if (cleanMsg.includes('(')) {
+        cleanMsg = cleanMsg.split('(')[0].trim();
+      }
+
+      const chip = document.createElement('div');
       chip.className = 'suggestion-chip';
-      chip.textContent = item;
-      chip.addEventListener('click', () => {
-        let cleanMsg = item;
-        // Xử lý cả dấu ngoặc đơn nửa góc '(' và dấu ngoặc đơn toàn góc '（' của tiếng Trung
-        if (cleanMsg.includes('（')) {
-          cleanMsg = cleanMsg.split('（')[0].trim();
-        }
-        if (cleanMsg.includes('(')) {
-          cleanMsg = cleanMsg.split('(')[0].trim();
-        }
+      chip.style.display = 'inline-flex';
+      chip.style.alignItems = 'center';
+      chip.style.gap = '6px';
+
+      chip.innerHTML = `
+        <span class="chip-speaker-btn" title="Nghe giọng đọc mẫu câu này" style="cursor:pointer; font-size:0.95rem; opacity:0.85; padding:2px 4px; border-radius:4px; transition:opacity 0.2s;">🔊</span>
+        <span class="chip-text" title="Bấm để gửi ngay" style="cursor:pointer;">${escapeHtml(item)}</span>
+      `;
+
+      // Bấm vào biểu tượng loa 🔊 -> nghe phát âm mẫu để luyện đọc theo
+      const speakerBtn = chip.querySelector('.chip-speaker-btn');
+      speakerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        speakerBtn.style.opacity = '1';
+        speakerBtn.textContent = '⏳';
+        playTTSAudio(cleanMsg, currentLang).finally(() => {
+          speakerBtn.textContent = '🔊';
+        });
+      });
+
+      // Bấm vào phần chữ -> gửi tin nhắn
+      chip.querySelector('.chip-text').addEventListener('click', () => {
         sendUserMessage(cleanMsg);
       });
+
       suggestionsList.appendChild(chip);
     });
     suggestionsContainer.style.display = 'block';
