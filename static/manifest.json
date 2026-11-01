@@ -1,0 +1,21 @@
+{
+  "name": "Gia Sư Ngoại Ngữ Free",
+  "short_name": "Gia Sư AI",
+  "description": "Luyện nói Tiếng Anh & Tiếng Trung 1-kèm-1 thông minh miễn phí cùng AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/static/img/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/img/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
