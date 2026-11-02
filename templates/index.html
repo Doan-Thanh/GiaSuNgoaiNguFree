@@ -44,22 +44,34 @@
       </div>
     </header>
 
+    <!-- BANNER CẢNH BÁO MỞ TRONG MESSENGER / ZALO -->
+    <div class="inapp-warning-banner" id="inapp-warning-banner" style="display:none;">
+      <div class="inapp-banner-content">
+        <span class="inapp-banner-icon">⚠️</span>
+        <div class="inapp-banner-text">
+          <b>Đang mở trong Messenger/Zalo:</b> Micro có thể bị chặn. Hãy bấm <b>[•••]</b> góc trên và chọn <b>"Mở bằng trình duyệt" (Chrome/Safari)</b> để luyện nói!
+        </div>
+        <button class="btn-close-inapp" id="btn-close-inapp" title="Đóng">✕</button>
+      </div>
+    </div>
+
     <!-- ASSISTANT TOOLBAR -->
     <div class="assistant-bar">
-      <div class="scenario-pill" id="current-scenario-title" title="Bấm vào đây để chọn chủ đề khác">
-        🎯 Chọn Chủ Đề
-      </div>
+      <button class="topic-pill-btn" id="btn-show-scenarios" title="Bấm vào đây để chọn hoặc đổi chủ đề luyện nói">
+        <span class="topic-icon" id="topic-icon">💬</span>
+        <span class="topic-title-text" id="current-scenario-title">Trò Chuyện Tự Do</span>
+        <span class="topic-arrow">▾</span>
+      </button>
       <div class="helper-toggles">
         <button class="toggle-pill active" id="toggle-pinyin" title="Bật/Tắt Phiên âm">
-          <span class="toggle-icon">Aa</span> Phiên âm
+          <span class="toggle-icon">Aa</span> <span class="toggle-label">Phiên âm</span>
         </button>
         <button class="toggle-pill active" id="toggle-translation" title="Bật/Tắt Bản Dịch">
-          <span class="toggle-icon">🌐</span> Dịch
+          <span class="toggle-icon">🌐</span> <span class="toggle-label">Dịch</span>
         </button>
         <button class="toggle-pill active" id="toggle-speed" title="Tốc độ đọc: 1.0x (Chuẩn) / 0.8x (Chậm) / 1.2x (Nhanh)">
-          <span class="toggle-icon">⚡</span> 1.0x
+          <span class="toggle-icon">⚡</span> <span class="speed-label-text">1.0x</span>
         </button>
-        <button class="btn-change-scenario" id="btn-show-scenarios">🎯 Đổi Chủ Đề ▾</button>
       </div>
     </div>
 
@@ -338,6 +350,40 @@
     </div>
   </div>
 
-  <script src="/static/js/app.js?v=4.7"></script>
+  <script src="/static/js/app.js?v=4.8"></script>
+  <!-- MODAL: HƯỚNG DẪN MỞ BẰNG CHROME/SAFARI ĐỂ DÙNG MIC -->
+  <div class="modal-backdrop" id="modal-mic-guide" style="display:none;">
+    <div class="modal-sheet mic-guide-sheet">
+      <div class="modal-header">
+        <h3>🎙️ Hướng Dẫn Kích Hoạt Micro</h3>
+        <button class="btn-close-modal" id="btn-close-mic-guide">✕</button>
+      </div>
+      <div class="mic-guide-content">
+        <div class="mic-guide-step">
+          <div class="step-num">1</div>
+          <div class="step-desc">
+            Ứng dụng <b>Facebook Messenger / Zalo</b> mặc định chặn quyền truy cập Micro của các trang web bên trong nó.
+          </div>
+        </div>
+        <div class="mic-guide-step">
+          <div class="step-num">2</div>
+          <div class="step-desc">
+            Nhấn vào <b>dấu 3 chấm [⋮] hoặc [•••]</b> ở góc trên cùng bên phải màn hình Messenger / Zalo.
+          </div>
+        </div>
+        <div class="mic-guide-step">
+          <div class="step-num">3</div>
+          <div class="step-desc">
+            Chọn <b>"Mở bằng trình duyệt"</b> (Open in Chrome / Safari) để thỏa sức nói và được nhận diện phát âm tự nhiên!
+          </div>
+        </div>
+        <div class="mic-guide-actions">
+          <button class="btn-copy-url" id="btn-copy-app-url">📋 Sao Chép Link Web</button>
+          <button class="btn-close-guide" id="btn-dismiss-mic-guide">Đã Hiểu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

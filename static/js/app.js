@@ -73,6 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnRefreshSuggestions = document.getElementById('btn-refresh-suggestions');
 
   const currentScenarioTitle = document.getElementById('current-scenario-title');
+  const topicIcon = document.getElementById('topic-icon');
+  const inappWarningBanner = document.getElementById('inapp-warning-banner');
+  const btnCloseInapp = document.getElementById('btn-close-inapp');
+  const modalMicGuide = document.getElementById('modal-mic-guide');
+  const btnCloseMicGuide = document.getElementById('btn-close-mic-guide');
+  const btnDismissMicGuide = document.getElementById('btn-dismiss-mic-guide');
+  const btnCopyAppUrl = document.getElementById('btn-copy-app-url');
   const btnShowScenarios = document.getElementById('btn-show-scenarios');
   const modalScenarios = document.getElementById('modal-scenarios');
   const btnCloseScenarios = document.getElementById('btn-close-scenarios');
@@ -103,6 +110,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const togglePinyinBtn = document.getElementById('toggle-pinyin');
   const toggleTransBtn = document.getElementById('toggle-translation');
   const langBtns = document.querySelectorAll('.lang-btn');
+
+  // HỖ TRỢ IN-APP WEBVIEW (MESSENGER / ZALO / INSTAGRAM) & HƯỚNG DẪN MICRO
+  function detectInAppBrowser() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+    return /FBAN|FBAV|FB_IAB|Messenger|Zalo|Instagram|Line\/|TikTok|musical_ly|MicroMessenger/i.test(ua);
+  }
+
+  function showMicGuideModal() {
+    if (modalMicGuide) {
+      modalMicGuide.style.display = 'flex';
+    }
+  }
+
+  function hideMicGuideModal() {
+    if (modalMicGuide) {
+      modalMicGuide.style.display = 'none';
+    }
+  }
+
+  function checkInAppBanner() {
+    if (inappWarningBanner && detectInAppBrowser()) {
+      if (sessionStorage.getItem('dismiss_inapp_banner') !== 'true') {
+        inappWarningBanner.style.display = 'block';
+      }
+    }
+  }
 
   // 1. SETUP SPEECH RECOGNITION (Web Speech API - Nhận diện thông minh & chống nhảy chữ)
   let accumulatedTranscript = '';
@@ -166,6 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       console.warn('Cảnh báo nhận diện giọng nói:', event.error);
+      stopRecording();
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        showMicGuideModal();
+      }
     };
 
     recognition.onend = () => {
@@ -182,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startRecording() {
     if (!recognition) {
-      alert('Trình duyệt này chưa kích hoạt micro nhận diện giọng nói. Bạn có thể gõ chữ vào ô nhập!');
+      showMicGuideModal();
       return;
     }
     if (isRecording) return;
@@ -195,6 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
       recognition.start();
     } catch (e) {
       console.warn('Mic start err:', e);
+      stopRecording();
+      showMicGuideModal();
     }
   }
 
@@ -429,7 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
     turnCount = 0;
     currentTopic = "";
     suggestionsContainer.style.display = 'none';
-    currentScenarioTitle.textContent = "🎯 Chọn Chủ Đề";
+    if (topicIcon) topicIcon.textContent = "🎯";
+    if (currentScenarioTitle) currentScenarioTitle.textContent = "Chọn Chủ Đề";
 
     const isZh = currentLang === 'zh';
     const topics = TOPIC_PRESETS[currentLang] || TOPIC_PRESETS.en;
@@ -491,12 +531,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const isFree = !topicName || topicName === 'free' || topicName.toLowerCase().includes('free') || topicName.toLowerCase().includes('tự do') || topicName.toLowerCase().includes('casual') || topicName.toLowerCase().includes('闲聊');
 
     currentTopic = isFree ? 'free' : topicName;
-    if (isFree) {
-      currentScenarioTitle.textContent = currentLang === 'zh'
-        ? "🎯 Trò Chuyện Tự Do (日常闲聊)"
-        : "🎯 Trò Chuyện Tự Do (Casual Talk)";
-    } else {
-      currentScenarioTitle.textContent = `🎯 ${topicName.split('(')[0].trim()}`;
+    const presets = TOPIC_PRESETS[currentLang] || TOPIC_PRESETS.en;
+    const matchedPreset = presets.find(t => t.id === topicName || t.title.toLowerCase() === topicName.toLowerCase() || (isFree && t.id === 'free'));
+
+    if (topicIcon) {
+      topicIcon.textContent = matchedPreset ? matchedPreset.icon : (isFree ? '💬' : '🎯');
+    }
+    if (currentScenarioTitle) {
+      if (isFree) {
+        currentScenarioTitle.textContent = "Trò Chuyện Tự Do";
+      } else if (matchedPreset) {
+        currentScenarioTitle.textContent = matchedPreset.title;
+      } else {
+        currentScenarioTitle.textContent = topicName.split('(')[0].replace(/^[^\w\s\u00C0-\u1EF9]+/, '').trim();
+      }
     }
 
     chatHistory = [];
@@ -587,7 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function selectScenario(scenario) {
     currentScenario = scenario;
-    currentScenarioTitle.textContent = scenario.title.split('(')[0].trim();
+    if (topicIcon) topicIcon.textContent = "🎯";
+    if (currentScenarioTitle) currentScenarioTitle.textContent = scenario.title.split('(')[0].trim();
     chatMessages.innerHTML = '';
     chatHistory = [];
     turnCount = 0;
@@ -684,7 +733,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderSuggestions(data.suggested_replies || []);
-    scrollToBottom();
+    setTimeout(() => {
+      const rowTop = row.offsetTop;
+      const targetScroll = Math.max(0, rowTop - 12);
+      chatMessages.scrollTo({
+        top: targetScroll,
+        behavior: 'smooth'
+      });
+    }, 60);
 
     if (audioUrl && autoPlay) {
       playSpeechWithFallback(speakText, currentLang, audioUrl, speakerBtn);
@@ -1072,7 +1128,48 @@ document.addEventListener('DOMContentLoaded', () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  // 5. MODAL EVENT HANDLERS
+  // 5. MODAL & IN-APP EVENT HANDLERS
+  if (btnCloseInapp) {
+    btnCloseInapp.addEventListener('click', () => {
+      if (inappWarningBanner) inappWarningBanner.style.display = 'none';
+      sessionStorage.setItem('dismiss_inapp_banner', 'true');
+    });
+  }
+
+  if (btnCloseMicGuide) {
+    btnCloseMicGuide.addEventListener('click', hideMicGuideModal);
+  }
+  if (btnDismissMicGuide) {
+    btnDismissMicGuide.addEventListener('click', hideMicGuideModal);
+  }
+  if (btnCopyAppUrl) {
+    btnCopyAppUrl.addEventListener('click', async () => {
+      const shareUrl = window.location.origin || window.location.href;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = shareUrl;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        btnCopyAppUrl.textContent = '✅ Đã Sao Chép Link!';
+        btnCopyAppUrl.style.background = '#059669';
+        btnCopyAppUrl.style.borderColor = '#10b981';
+        setTimeout(() => {
+          btnCopyAppUrl.textContent = '📋 Sao Chép Link Web';
+          btnCopyAppUrl.style.background = '';
+          btnCopyAppUrl.style.borderColor = '';
+        }, 2500);
+      } catch (e) {
+        alert('Link trang: ' + shareUrl);
+      }
+    });
+  }
+
   if (currentScenarioTitle) {
     currentScenarioTitle.style.cursor = 'pointer';
     currentScenarioTitle.title = 'Bấm vào đây để chọn chủ đề khác';
@@ -1403,5 +1500,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // STARTUP
   initSpeechRecognition();
+  checkInAppBanner();
   loadConfig();
 });
