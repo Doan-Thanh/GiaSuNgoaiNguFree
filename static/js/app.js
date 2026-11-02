@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             lang: currentLang,
-            scenarioId: currentTopic || (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk'),
+            scenarioId: (!currentTopic || currentTopic === 'free') ? (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk') : currentTopic,
             turnCount: turnCount,
             history: chatHistory.slice(-4)
           })
@@ -1026,7 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           userText: text,
           lang: currentLang,
-          scenarioId: currentTopic || (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk'),
+          scenarioId: (!currentTopic || currentTopic === 'free') ? (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk') : currentTopic,
           history: chatHistory.slice(-6),
           turnCount: turnCount
         })
