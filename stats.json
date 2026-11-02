@@ -1,7 +1,7 @@
 {
   "started_at": "2026-11-01 19:26:56",
-  "last_active": "2026-11-01 19:26:56",
-  "total_visits": 1,
+  "last_active": "2026-11-01 23:50:22",
+  "total_visits": 2,
   "total_chats": 1,
   "chats_by_lang": {
     "en": 0,
@@ -11,16 +11,22 @@
     "free_zh": 1
   },
   "daily_visits": {
-    "2026-11-01": 1
+    "2026-11-01": 2
   },
   "daily_chats": {
     "2026-11-01": 1
   },
   "devices": {
     "mobile": 1,
-    "desktop": 0
+    "desktop": 1
   },
   "recent_activities": [
+    {
+      "time": "23:50:22",
+      "date": "2026-11-01",
+      "type": "visit",
+      "desc": "Mở ứng dụng (💻 Máy tính)"
+    },
     {
       "time": "19:26:56",
       "date": "2026-11-01",

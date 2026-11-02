@@ -61,6 +61,11 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
+@app.get("/api/ping")
+async def ping_keep_alive():
+    """Endpoint siêu nhẹ phục vụ Keep-Alive, không ghi nhận visit ảo vào analytics"""
+    return {"status": "awake", "service": "GiaSuNgoaiNguFree", "timestamp": time.time()}
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_index(request: Request):
     ua = request.headers.get("user-agent", "")

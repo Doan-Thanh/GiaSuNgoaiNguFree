@@ -1,0 +1,19 @@
+name: Render Keep Alive 24/7
+
+on:
+  schedule:
+    # Chạy mỗi 12 phút (Render tự động ngủ sau 15 phút không có request)
+    - cron: '*/12 * * * *'
+  workflow_dispatch: # Cho phép bấm chạy thủ công trên giao diện GitHub Actions
+
+jobs:
+  keep-alive:
+    name: Ping Render Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Endpoint
+        run: |
+          echo "Sending Keep-Alive ping to Gia Su Ngoai Ngu Free..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -m 45 "https://giasungoaingufree.onrender.com/api/ping" || curl -s -w "\n%{http_code}" -m 45 "https://giasungoaingufree.onrender.com/api/config")
+          echo "Response:"
+          echo "$RESPONSE"
