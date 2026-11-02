@@ -1,4 +1,50 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // ====== BỘ GIÁM SÁT NGƯỜI DÙNG CHỦ ĐỘNG (CLIENT ANALYTICS BEACON) ======
+  function sendAnalyticsEvent(type, details) {
+    try {
+      let userId = localStorage.getItem('thanhbooks_uid');
+      if (!userId) {
+        userId = 'u_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+        localStorage.setItem('thanhbooks_uid', userId);
+      }
+      let sessionId = sessionStorage.getItem('thanhbooks_sid');
+      if (!sessionId) {
+        sessionId = 's_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+        sessionStorage.setItem('thanhbooks_sid', sessionId);
+      }
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      let ref = 'Trực tiếp / App';
+      if (document.referrer) {
+        try {
+          ref = new URL(document.referrer).hostname || 'Trang ngoài';
+        } catch(e) {
+          ref = 'Trang ngoài';
+        }
+      }
+      fetch('/api/analytics/event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: type || 'visit',
+          userId: userId,
+          sessionId: sessionId,
+          platform: isMobile ? 'mobile' : 'desktop',
+          details: details || Mở ứng dụng () • Nguồn: 
+        }),
+        keepalive: true
+      }).catch(() => {});
+    } catch(e) {}
+  }
+
+  // Kích hoạt beacon ngay khi mở ứng dụng
+  sendAnalyticsEvent('visit');
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      sendAnalyticsEvent('active', 'Quay lại học');
+    }
+  });
+
   // STATE
   let currentLang = 'en'; // 'en' hoặc 'zh'
   let currentScenario = null;

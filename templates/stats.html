@@ -310,7 +310,7 @@
       <div class="kpi-card visits">
         <div class="kpi-title">👥 Tổng Lượt Vào Web</div>
         <div class="kpi-value" id="val-total-visits">0</div>
-        <div class="kpi-sub">Hôm nay: <b id="val-today-visits">0</b> lượt</div>
+        <div class="kpi-sub">Hôm nay: <b id="val-today-visits">0</b> lượt • <span id="val-unique-users" style="color:var(--accent-cyan); font-weight:700;">0</span> người dùng</div>
       </div>
 
       <div class="kpi-card chats">
@@ -450,6 +450,9 @@
       // KPIs
       document.getElementById('val-total-visits').textContent = (data.total_visits || 0).toLocaleString();
       document.getElementById('val-today-visits').textContent = (data.visits_today || 0).toLocaleString();
+      const uniqueCount = data.unique_users_count || (data.visits_today > 0 ? 1 : 0);
+      const elUnique = document.getElementById('val-unique-users');
+      if (elUnique) elUnique.textContent = uniqueCount.toLocaleString();
       document.getElementById('val-total-chats').textContent = (data.total_chats || 0).toLocaleString();
       document.getElementById('val-today-chats').textContent = (data.chats_today || 0).toLocaleString();
 

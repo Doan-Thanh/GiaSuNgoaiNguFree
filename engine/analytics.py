@@ -19,6 +19,9 @@ DEFAULT_STATS = {
     "last_active": datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S"),
     "total_visits": 0,
     "total_chats": 0,
+    "unique_users_count": 0,
+    "unique_users": [],
+    "sessions_today": {},
     "chats_by_lang": {
         "en": 0,
         "zh": 0
@@ -33,6 +36,11 @@ DEFAULT_STATS = {
     "recent_activities": []
 }
 
+BOT_KEYWORDS = (
+    "bot", "crawl", "spider", "preview", "facebookexternalhit",
+    "slackbot", "uptime", "monitor", "keepalive", "curl", "wget", "headlesschrome"
+)
+
 def _get_today_str():
     return datetime.now(VN_TZ).strftime("%Y-%m-%d")
 
@@ -45,7 +53,6 @@ def _load_stats():
     try:
         with open(STATS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Ensure all keys exist
             for k, v in DEFAULT_STATS.items():
                 if k not in data:
                     data[k] = v
@@ -62,6 +69,11 @@ def _save_stats(data):
         logger.error(f"Lỗi lưu stats.json: {e}")
 
 def record_visit(user_agent: str = ""):
+    """Ghi nhận lượt truy cập trực tiếp từ server (kèm lọc bot/crawler)"""
+    ua_lower = (user_agent or "").lower()
+    if any(b in ua_lower for b in BOT_KEYWORDS):
+        return
+
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -70,12 +82,9 @@ def record_visit(user_agent: str = ""):
         data["total_visits"] = data.get("total_visits", 0) + 1
         data["last_active"] = now
 
-        # Daily visits
         daily = data.setdefault("daily_visits", {})
         daily[today] = daily.get(today, 0) + 1
 
-        # Device detection
-        ua_lower = (user_agent or "").lower()
         devices = data.setdefault("devices", {"mobile": 0, "desktop": 0})
         if any(kw in ua_lower for kw in ["iphone", "android", "mobile", "ipad"]):
             devices["mobile"] = devices.get("mobile", 0) + 1
@@ -84,7 +93,6 @@ def record_visit(user_agent: str = ""):
             devices["desktop"] = devices.get("desktop", 0) + 1
             device_type = "💻 Máy tính"
 
-        # Log recent activity (keep max 30)
         recent = data.setdefault("recent_activities", [])
         recent.insert(0, {
             "time": datetime.now(VN_TZ).strftime("%H:%M:%S"),
@@ -92,11 +100,69 @@ def record_visit(user_agent: str = ""):
             "type": "visit",
             "desc": f"Mở ứng dụng ({device_type})"
         })
-        data["recent_activities"] = recent[:30]
+        data["recent_activities"] = recent[:35]
+
+        _save_stats(data)
+
+def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = ""):
+    """Ghi nhận sự kiện chủ động từ JavaScript của trình duyệt (chống nuốt do cache)"""
+    with _lock:
+        data = _load_stats()
+        today = _get_today_str()
+        now = _get_now_str()
+
+        data["last_active"] = now
+
+        # Theo dõi người dùng độc nhất (Unique User)
+        if user_id:
+            users_list = data.setdefault("unique_users", [])
+            if user_id not in users_list:
+                users_list.append(user_id)
+                if len(users_list) > 1000:
+                    users_list.pop(0)
+            data["unique_users_count"] = max(data.get("unique_users_count", 0), len(users_list))
+
+        # Theo dõi phiên (Session): Mỗi phiên mới tính 1 visit chính xác
+        is_new_session = False
+        if session_id:
+            sessions_dict = data.setdefault("sessions_today", {})
+            today_sessions = sessions_dict.setdefault(today, [])
+            if session_id not in today_sessions:
+                today_sessions.append(session_id)
+                if len(today_sessions) > 500:
+                    today_sessions.pop(0)
+                is_new_session = True
+                data["total_visits"] = data.get("total_visits", 0) + 1
+                daily = data.setdefault("daily_visits", {})
+                daily[today] = daily.get(today, 0) + 1
+
+        # Phân loại thiết bị
+        ua_str = f"{user_agent} {platform}".lower()
+        devices = data.setdefault("devices", {"mobile": 0, "desktop": 0})
+        if any(kw in ua_str for kw in ["iphone", "android", "mobile", "ipad"]):
+            if is_new_session:
+                devices["mobile"] = devices.get("mobile", 0) + 1
+            device_label = "📱 Điện thoại"
+        else:
+            if is_new_session:
+                devices["desktop"] = devices.get("desktop", 0) + 1
+            device_label = "💻 Máy tính"
+
+        # Ghi nhật ký chi tiết
+        action_desc = details or f"Truy cập ứng dụng ({device_label})"
+        recent = data.setdefault("recent_activities", [])
+        recent.insert(0, {
+            "time": datetime.now(VN_TZ).strftime("%H:%M:%S"),
+            "date": today,
+            "type": event_type,
+            "desc": action_desc
+        })
+        data["recent_activities"] = recent[:35]
 
         _save_stats(data)
 
 def record_chat(lang: str, scenario_id: str):
+    """Ghi nhận lượt hội thoại (chat tự do hoặc bấm chủ đề)"""
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -105,19 +171,15 @@ def record_chat(lang: str, scenario_id: str):
         data["total_chats"] = data.get("total_chats", 0) + 1
         data["last_active"] = now
 
-        # Language breakdown
         by_lang = data.setdefault("chats_by_lang", {"en": 0, "zh": 0})
         by_lang[lang] = by_lang.get(lang, 0) + 1
 
-        # Scenario breakdown
         by_scen = data.setdefault("chats_by_scenario", {})
         by_scen[scenario_id] = by_scen.get(scenario_id, 0) + 1
 
-        # Daily chats
         daily = data.setdefault("daily_chats", {})
         daily[today] = daily.get(today, 0) + 1
 
-        # Friendly scenario title
         lang_label = "🇬🇧 Tiếng Anh" if lang == "en" else "🇨🇳 Tiếng Trung"
         recent = data.setdefault("recent_activities", [])
         recent.insert(0, {
@@ -126,23 +188,26 @@ def record_chat(lang: str, scenario_id: str):
             "type": "chat",
             "desc": f"Luyện nói {lang_label} • Tình huống: {scenario_id}"
         })
-        data["recent_activities"] = recent[:30]
+        data["recent_activities"] = recent[:35]
 
         _save_stats(data)
 
 def get_stats_summary():
+    """Lấy dữ liệu tổng hợp phục vụ dashboard"""
     with _lock:
         data = _load_stats()
         today = _get_today_str()
         
         visits_today = data.get("daily_visits", {}).get(today, 0)
         chats_today = data.get("daily_chats", {}).get(today, 0)
+        unique_users_count = data.get("unique_users_count", len(data.get("unique_users", [])))
         
         return {
             "started_at": data.get("started_at"),
             "last_active": data.get("last_active"),
             "total_visits": data.get("total_visits", 0),
             "visits_today": visits_today,
+            "unique_users_count": max(unique_users_count, 1 if visits_today > 0 else 0),
             "total_chats": data.get("total_chats", 0),
             "chats_today": chats_today,
             "chats_by_lang": data.get("chats_by_lang", {"en": 0, "zh": 0}),

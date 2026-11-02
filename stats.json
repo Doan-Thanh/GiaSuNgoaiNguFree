@@ -1,26 +1,79 @@
 {
   "started_at": "2026-11-01 19:26:56",
-  "last_active": "2026-11-01 23:50:22",
-  "total_visits": 2,
-  "total_chats": 1,
+  "last_active": "2026-11-02 11:54:21",
+  "total_visits": 9,
+  "visits_today": 7,
+  "total_chats": 2,
+  "chats_today": 1,
   "chats_by_lang": {
     "en": 0,
-    "zh": 1
+    "zh": 2
   },
   "chats_by_scenario": {
-    "free_zh": 1
-  },
-  "daily_visits": {
-    "2026-11-01": 2
-  },
-  "daily_chats": {
-    "2026-11-01": 1
+    "free_zh": 1,
+    "free": 1
   },
   "devices": {
-    "mobile": 1,
-    "desktop": 1
+    "mobile": 5,
+    "desktop": 4
+  },
+  "daily_visits": {
+    "2026-11-01": 2,
+    "2026-11-02": 7
+  },
+  "daily_chats": {
+    "2026-11-01": 1,
+    "2026-11-02": 1
   },
   "recent_activities": [
+    {
+      "time": "11:54:21",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (📱 Điện thoại)"
+    },
+    {
+      "time": "10:56:25",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (📱 Điện thoại)"
+    },
+    {
+      "time": "10:48:01",
+      "date": "2026-11-02",
+      "type": "chat",
+      "desc": "Luyện nói 🇨🇳 Tiếng Trung • Tình huống: free"
+    },
+    {
+      "time": "10:09:33",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (📱 Điện thoại)"
+    },
+    {
+      "time": "09:32:41",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (📱 Điện thoại)"
+    },
+    {
+      "time": "09:30:20",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (💻 Máy tính)"
+    },
+    {
+      "time": "09:28:19",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (💻 Máy tính)"
+    },
+    {
+      "time": "09:27:29",
+      "date": "2026-11-02",
+      "type": "visit",
+      "desc": "Mở ứng dụng (💻 Máy tính)"
+    },
     {
       "time": "23:50:22",
       "date": "2026-11-01",
@@ -39,5 +92,24 @@
       "type": "visit",
       "desc": "Mở ứng dụng (📱 Điện thoại)"
     }
-  ]
+  ],
+  "unique_users_count": 5,
+  "unique_users": [
+    "user_init_1",
+    "user_init_2",
+    "user_init_3",
+    "user_init_4",
+    "user_init_5"
+  ],
+  "sessions_today": {
+    "2026-11-02": [
+      "s_init_1",
+      "s_init_2",
+      "s_init_3",
+      "s_init_4",
+      "s_init_5",
+      "s_init_6",
+      "s_init_7"
+    ]
+  }
 }

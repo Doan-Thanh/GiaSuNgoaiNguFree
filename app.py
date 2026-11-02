@@ -66,6 +66,25 @@ async def ping_keep_alive():
     """Endpoint siêu nhẹ phục vụ Keep-Alive, không ghi nhận visit ảo vào analytics"""
     return {"status": "awake", "service": "GiaSuNgoaiNguFree", "timestamp": time.time()}
 
+@app.post("/api/analytics/event")
+async def track_client_event(request: Request, payload: dict = Body(...)):
+    """Tiếp nhận sự kiện tương tác chủ động từ client JavaScript"""
+    ua = request.headers.get("user-agent", "")
+    event_type = payload.get("type", "visit")
+    details = payload.get("details", "")
+    user_id = payload.get("userId", "")
+    session_id = payload.get("sessionId", "")
+    platform = payload.get("platform", "")
+    analytics.record_client_event(
+        event_type=event_type,
+        details=details,
+        user_id=user_id,
+        session_id=session_id,
+        platform=platform,
+        user_agent=ua
+    )
+    return {"status": "ok"}
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_index(request: Request):
     ua = request.headers.get("user-agent", "")
@@ -73,7 +92,12 @@ async def serve_index(request: Request):
     index_path = os.path.join(BASE_DIR, "templates", "index.html")
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
+            headers = {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+            return HTMLResponse(content=f.read(), headers=headers)
     return HTMLResponse("<h3>Chưa tìm thấy templates/index.html</h3>")
 
 ADMIN_KEYS = {"thanhbooks", "8335897"}
@@ -169,6 +193,12 @@ async def start_topic(payload: dict = Body(...)):
     topic = payload.get("topic", "Trò chuyện tự do").strip()
     lang = payload.get("lang", "en")
     voice = payload.get("voice")
+
+    # Ghi nhận lượt bắt đầu luyện tập theo chủ đề
+    try:
+        analytics.record_chat(lang=lang, scenario_id=topic)
+    except Exception as e:
+        logger.warning(f"Lỗi ghi nhận analytics topic: {e}")
 
     cfg = load_config()
     api_key = cfg.get("geminiApiKey", "").strip()
