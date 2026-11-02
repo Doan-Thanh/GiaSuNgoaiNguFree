@@ -44,14 +44,21 @@ Gia sư trí tuệ nhân tạo luyện nói ngoại ngữ 1-kèm-1 thông minh, 
 
 ---
 
-## 📱 4. Đưa Lên Màn Hình Điện Thoại (iPhone & Android)
+## 📱 4. Dùng Trực Tiếp Trên Mọi Thiết Bị (Điện Thoại & Máy Tính)
 
-Bạn có thể biến Web App này thành một ứng dụng trên điện thoại di động:
-1. Kết nối điện thoại chung mạng Wifi với máy tính.
-2. Mở trình duyệt Safari (trên iPhone) hoặc Chrome (trên Android) và gõ địa chỉ IP máy tính hiển thị trên màn hình khởi động (Ví dụ: `http://192.168.1.8:53210`).
-3. **Trên iPhone:** Bấm nút Chia sẻ (biểu tượng ô vuông mũi tên lên) -> Chọn **"Thêm vào màn hình chính" (Add to Home Screen)**.
-4. **Trên Android:** Bấm menu 3 chấm ở góc trên -> Chọn **"Cài đặt ứng dụng"** hoặc **"Thêm vào màn hình chính"**.
-5. Ứng dụng sẽ xuất hiện trên màn hình điện thoại như một app độc lập với icon riêng, mở toàn màn hình để bạn luyện nói mọi lúc mọi nơi!
+Bạn có thể sử dụng ứng dụng ở bất kỳ đâu rất dễ dàng và linh hoạt:
+
+### 🌐 Cách 1: Sử Dụng Bản Online Đám Mây 24/7 (Khuyên Dùng - Hoàn Toàn Miễn Phí)
+* **Đường link chính thức:** [https://giasungoaingufree.onrender.com/](https://giasungoaingufree.onrender.com/)
+* Bạn chỉ cần mở link trên bất kỳ thiết bị nào (hoặc gửi link qua Zalo/Facebook để mở):
+  * **Trên iPhone (Safari):** Bấm biểu tượng Chia sẻ `[↑]` ở dưới đáy màn hình -> Chọn **"Thêm vào MH chính" (Add to Home Screen)**.
+  * **Trên Android (Chrome):** Bấm biểu tượng 3 chấm `⋮` ở góc trên -> Chọn **"Cài đặt ứng dụng"** (hoặc *"Thêm vào màn hình chính"*).
+  * **Trên Máy tính (Chrome / Edge):** Bấm vào biểu tượng **"Cài đặt" (Install)** ở góc phải thanh địa chỉ trình duyệt để biến web thành ứng dụng desktop riêng biệt, mở toàn màn hình chuyên nghiệp!
+* Ứng dụng sẽ xuất hiện ngay ngoài màn hình chính như một app chuyên nghiệp tải từ App Store / CH Play, học mọi lúc mọi nơi mà không cần mở máy tính!
+
+### 💻 Cách 2: Sử Dụng Bản Chạy Offline / Cục Bộ Trên Máy Tính
+* Khi không có kết nối internet hoặc đường truyền mạng chập chờn:
+* Mở thư mục dự án và nhấp đúp vào **`GiaSuNgoaiNguFree.bat`** để chạy trực tiếp trên máy (mở cổng `http://127.0.0.1:53210`).
 
 ---
 

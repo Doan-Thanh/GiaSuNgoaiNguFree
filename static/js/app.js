@@ -1217,28 +1217,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseGuideDone = document.getElementById('btn-close-guide-done');
   const tabBtnIos = document.getElementById('tab-btn-ios');
   const tabBtnAndroid = document.getElementById('tab-btn-android');
+  const tabBtnPc = document.getElementById('tab-btn-pc');
   const guideContentIos = document.getElementById('guide-content-ios');
   const guideContentAndroid = document.getElementById('guide-content-android');
+  const guideContentPc = document.getElementById('guide-content-pc');
   const androidPwaBanner = document.getElementById('android-pwa-banner');
   const btnTriggerPwa = document.getElementById('btn-trigger-pwa');
 
   function switchInstallTab(tab) {
-    if (tab === 'ios') {
-      if (tabBtnIos) tabBtnIos.classList.add('active');
-      if (tabBtnAndroid) tabBtnAndroid.classList.remove('active');
-      if (guideContentIos) guideContentIos.style.display = 'block';
-      if (guideContentAndroid) guideContentAndroid.style.display = 'none';
-    } else {
-      if (tabBtnAndroid) tabBtnAndroid.classList.add('active');
-      if (tabBtnIos) tabBtnIos.classList.remove('active');
-      if (guideContentAndroid) guideContentAndroid.style.display = 'block';
-      if (guideContentIos) guideContentIos.style.display = 'none';
-    }
+    const tabList = [
+      { id: 'ios', btn: tabBtnIos, content: guideContentIos },
+      { id: 'android', btn: tabBtnAndroid, content: guideContentAndroid },
+      { id: 'pc', btn: tabBtnPc, content: guideContentPc }
+    ];
+    tabList.forEach(t => {
+      if (t.id === tab) {
+        if (t.btn) t.btn.classList.add('active');
+        if (t.content) t.content.style.display = 'block';
+      } else {
+        if (t.btn) t.btn.classList.remove('active');
+        if (t.content) t.content.style.display = 'none';
+      }
+    });
   }
 
   function openInstallGuideModal() {
     const isAndroid = /Android/i.test(navigator.userAgent);
-    switchInstallTab(isAndroid ? 'android' : 'ios');
+    const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isAndroid) {
+      switchInstallTab('android');
+    } else if (isIos) {
+      switchInstallTab('ios');
+    } else {
+      switchInstallTab('pc');
+    }
     if (modalInstallGuide) modalInstallGuide.style.display = 'flex';
   }
 
@@ -1274,6 +1286,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (tabBtnAndroid) {
     tabBtnAndroid.addEventListener('click', () => switchInstallTab('android'));
+  }
+
+  if (tabBtnPc) {
+    tabBtnPc.addEventListener('click', () => switchInstallTab('pc'));
   }
 
   // Bắt sự kiện beforeinstallprompt (Android Chrome tự động)
