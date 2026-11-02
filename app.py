@@ -75,13 +75,15 @@ async def track_client_event(request: Request, payload: dict = Body(...)):
     user_id = payload.get("userId", "")
     session_id = payload.get("sessionId", "")
     platform = payload.get("platform", "")
+    lang = payload.get("lang", "en")
     analytics.record_client_event(
         event_type=event_type,
         details=details,
         user_id=user_id,
         session_id=session_id,
         platform=platform,
-        user_agent=ua
+        user_agent=ua,
+        lang=lang
     )
     return {"status": "ok"}
 
@@ -250,6 +252,12 @@ async def text_to_speech(payload: dict = Body(...)):
 
     if not text:
         raise HTTPException(status_code=400, detail="Thiếu văn bản cần phát âm.")
+
+    # Ghi nhận lượt nghe phát âm
+    try:
+        analytics.record_listen(lang=lang, text=text)
+    except Exception as e:
+        logger.warning(f"Lỗi ghi nhận analytics tts: {e}")
 
     audio_b64 = await generate_speech_base64(text, voice, lang)
     return {"success": True, "audio": audio_b64}

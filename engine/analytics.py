@@ -104,7 +104,7 @@ def record_visit(user_agent: str = ""):
 
         _save_stats(data)
 
-def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = ""):
+def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = "", lang: str = "en"):
     """Ghi nhận sự kiện chủ động từ JavaScript của trình duyệt (chống nuốt do cache)"""
     with _lock:
         data = _load_stats()
@@ -159,6 +159,33 @@ def record_client_event(event_type: str = "visit", details: str = "", user_id: s
         })
         data["recent_activities"] = recent[:35]
 
+        _save_stats(data)
+
+def record_listen(lang: str, text: str):
+    """Ghi nhận lượt nghe phát âm mẫu"""
+    with _lock:
+        data = _load_stats()
+        today = _get_today_str()
+        now = _get_now_str()
+
+        data["last_active"] = now
+        by_lang = data.setdefault("chats_by_lang", {"en": 0, "zh": 0})
+        by_lang[lang] = by_lang.get(lang, 0) + 1
+        data["total_chats"] = data.get("total_chats", 0) + 1
+
+        daily = data.setdefault("daily_chats", {})
+        daily[today] = daily.get(today, 0) + 1
+
+        short_text = text[:32] + ("..." if len(text) > 32 else "")
+        lang_label = "🇬🇧 Tiếng Anh" if lang == "en" else "🇨🇳 Tiếng Trung"
+        recent = data.setdefault("recent_activities", [])
+        recent.insert(0, {
+            "time": datetime.now(VN_TZ).strftime("%H:%M:%S"),
+            "date": today,
+            "type": "listen",
+            "desc": f"Nghe phát âm {lang_label}: \"{short_text}\""
+        })
+        data["recent_activities"] = recent[:35]
         _save_stats(data)
 
 def record_chat(lang: str, scenario_id: str):

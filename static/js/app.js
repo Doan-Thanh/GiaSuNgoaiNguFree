@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ref = 'Trang ngoài';
         }
       }
+      const userLang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : (localStorage.getItem('user_lang') || 'en');
+      const langLabel = userLang === 'zh' ? '🇨🇳 Tiếng Trung' : '🇬🇧 Tiếng Anh';
       fetch('/api/analytics/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,7 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
           userId: userId,
           sessionId: sessionId,
           platform: isMobile ? 'mobile' : 'desktop',
-          details: details || Mở ứng dụng () • Nguồn: 
+          lang: userLang,
+          details: details || `Mở ứng dụng (${isMobile ? '📱 Điện thoại' : '💻 Máy tính'} • ${langLabel}) • Nguồn: ${ref}`
         }),
         keepalive: true
       }).catch(() => {});
@@ -337,7 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.textContent = appConfig.donateName;
       }
 
-      currentLang = appConfig.currentLang || 'en';
+      const savedLang = localStorage.getItem('user_lang');
+      currentLang = savedLang || 'en';
       updateLangUI();
       startTopicConversation('free', false);
     } catch (err) {
@@ -369,13 +373,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetLang === currentLang) return;
 
       currentLang = targetLang;
+      localStorage.setItem('user_lang', currentLang);
       updateLangUI();
+      sendAnalyticsEvent('action', `Đổi sang học ${currentLang === 'en' ? '🇬🇧 Tiếng Anh' : '🇨🇳 Tiếng Trung'}`);
       startTopicConversation('free', false);
-      fetch('/api/config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentLang })
-      });
     });
   });
 

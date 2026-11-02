@@ -216,6 +216,8 @@
     }
     .tag-visit { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
     .tag-chat { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .tag-listen { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+    .tag-action { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
 
     /* STATUS FOOTER */
     .status-footer {
@@ -496,11 +498,23 @@
         actContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào.</p>';
       } else {
         actContainer.innerHTML = activities.map(act => {
-          const isVisit = act.type === 'visit';
+          const type = act.type || 'visit';
+          let tagClass = 'tag-visit';
+          let tagLabel = 'Truy cập';
+          if (type === 'chat') {
+            tagClass = 'tag-chat';
+            tagLabel = 'Luyện nói';
+          } else if (type === 'listen') {
+            tagClass = 'tag-listen';
+            tagLabel = 'Phát âm';
+          } else if (type === 'action') {
+            tagClass = 'tag-action';
+            tagLabel = 'Thao tác';
+          }
           return `
             <div class="activity-item">
               <span class="activity-time">${act.time}</span>
-              <span class="activity-tag ${isVisit ? 'tag-visit' : 'tag-chat'}">${isVisit ? 'Truy cập' : 'Hội thoại'}</span>
+              <span class="activity-tag ${tagClass}">${tagLabel}</span>
               <span class="activity-desc">${act.desc}</span>
             </div>
           `;

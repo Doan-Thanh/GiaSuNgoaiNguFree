@@ -3,15 +3,17 @@
   "last_active": "2026-11-02 11:54:21",
   "total_visits": 9,
   "visits_today": 7,
-  "total_chats": 2,
-  "chats_today": 1,
+  "total_chats": 9,
+  "chats_today": 7,
   "chats_by_lang": {
-    "en": 0,
-    "zh": 2
+    "en": 5,
+    "zh": 4
   },
   "chats_by_scenario": {
-    "free_zh": 1,
-    "free": 1
+    "free_zh": 2,
+    "free": 2,
+    "Casual Daily Talk": 3,
+    "Gọi đồ uống (Ordering Drinks)": 2
   },
   "devices": {
     "mobile": 5,
@@ -23,9 +25,33 @@
   },
   "daily_chats": {
     "2026-11-01": 1,
-    "2026-11-02": 1
+    "2026-11-02": 7
   },
   "recent_activities": [
+    {
+      "time": "12:54:10",
+      "date": "2026-11-02",
+      "type": "chat",
+      "desc": "Luyện nói 🇬🇧 Tiếng Anh • Tình huống: Casual Daily Talk"
+    },
+    {
+      "time": "12:52:05",
+      "date": "2026-11-02",
+      "type": "listen",
+      "desc": "Nghe phát âm 🇬🇧 Tiếng Anh: \"Could I have a cup of coffee...\""
+    },
+    {
+      "time": "12:50:40",
+      "date": "2026-11-02",
+      "type": "chat",
+      "desc": "Luyện nói 🇬🇧 Tiếng Anh • Tình huống: Gọi đồ uống (Ordering Drinks)"
+    },
+    {
+      "time": "12:49:15",
+      "date": "2026-11-02",
+      "type": "action",
+      "desc": "Đổi sang học 🇬🇧 Tiếng Anh"
+    },
     {
       "time": "11:54:21",
       "date": "2026-11-02",
