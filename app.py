@@ -24,7 +24,7 @@ CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 def load_config():
     default_cfg = {
         "geminiApiKey": os.environ.get("GEMINI_API_KEY", ""),
-        "geminiModel": os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite"),
+        "geminiModel": os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite"),
         "currentLang": "zh",
         "voiceEn": DEFAULT_VOICES["en"],
         "voiceZh": DEFAULT_VOICES["zh"],
@@ -160,7 +160,7 @@ async def handle_chat(payload: dict = Body(...)):
 
     cfg = load_config()
     api_key = cfg.get("geminiApiKey", "").strip()
-    preferred_model = cfg.get("geminiModel", "gemini-3.5-flash-lite")
+    preferred_model = cfg.get("geminiModel", "gemini-3.1-flash-lite")
 
     # Phân tích ngữ cảnh và tạo câu trả lời + 3 gợi ý linh động
     ai_result = process_tutor_chat(
@@ -204,7 +204,7 @@ async def start_topic(payload: dict = Body(...)):
 
     cfg = load_config()
     api_key = cfg.get("geminiApiKey", "").strip()
-    preferred_model = cfg.get("geminiModel", "gemini-3.5-flash-lite")
+    preferred_model = cfg.get("geminiModel", "gemini-3.1-flash-lite")
 
     ai_result = start_topic_conversation(
         api_key=api_key,
@@ -233,7 +233,7 @@ async def refresh_suggestions(payload: dict = Body(...)):
 
     cfg = load_config()
     api_key = cfg.get("geminiApiKey", "").strip()
-    preferred_model = cfg.get("geminiModel", "gemini-3.5-flash-lite")
+    preferred_model = cfg.get("geminiModel", "gemini-3.1-flash-lite")
 
     suggestions = generate_fresh_suggestions(
         api_key=api_key,

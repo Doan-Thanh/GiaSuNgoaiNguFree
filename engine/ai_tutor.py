@@ -40,9 +40,9 @@ SCENARIOS = {
     ]
 }
 
-def call_gemini_api(api_key: str, history: list, system_instruction: str = "", preferred_model: str = "gemini-3.5-flash-lite") -> str:
+def call_gemini_api(api_key: str, history: list, system_instruction: str = "", preferred_model: str = "gemini-3.1-flash-lite") -> str:
     """Gọi trực tiếp Google Gemini API qua REST v1beta với model tối ưu tốc độ phản hồi."""
-    candidate_models = ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-flash-lite-latest"]
+    candidate_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite-preview", "gemini-flash-lite-latest"]
     models_to_try = [preferred_model] + [m for m in candidate_models if m != preferred_model]
     headers = {"Content-Type": "application/json"}
 
@@ -73,7 +73,7 @@ def call_gemini_api(api_key: str, history: list, system_instruction: str = "", p
     for model_name in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
         try:
-            res = requests.post(url, headers=headers, json=payload, timeout=15)
+            res = requests.post(url, headers=headers, json=payload, timeout=8)
             data = res.json()
             if res.status_code == 200 and "candidates" in data:
                 raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
@@ -86,7 +86,7 @@ def call_gemini_api(api_key: str, history: list, system_instruction: str = "", p
 
     raise RuntimeError(f"Gemini API không phản hồi: {last_err}")
 
-def process_tutor_chat(api_key: str, user_text: str, lang: str, scenario_id: str, history: list = None, turn_count: int = 1, preferred_model: str = "gemini-3.5-flash-lite"):
+def process_tutor_chat(api_key: str, user_text: str, lang: str, scenario_id: str, history: list = None, turn_count: int = 1, preferred_model: str = "gemini-3.1-flash-lite"):
     """
     Xử lý phản hồi gia sư AI cho cả Tiếng Anh và Tiếng Trung, kèm hệ thống gợi ý cực kỳ linh động và chuẩn xác.
     """
@@ -170,7 +170,7 @@ YOUR TASKS:
         logger.warning(f"Gemini API không phản hồi ({e}), chuyển sang động cơ mô phỏng ngữ cảnh linh động.")
         return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count, error_note=str(e))
 
-def generate_fresh_suggestions(api_key: str, lang: str, scenario_id: str, history: list = None, preferred_model: str = "gemini-3.5-flash-lite") -> list:
+def generate_fresh_suggestions(api_key: str, lang: str, scenario_id: str, history: list = None, preferred_model: str = "gemini-3.1-flash-lite") -> list:
     """Tạo 3 câu gợi ý mới toanh khớp 100% với câu nói gần nhất của gia sư."""
     scenario_info = next((s for s in SCENARIOS.get(lang, []) if s["id"] == scenario_id), None)
     scenario_title = scenario_info.get("title", "") if scenario_info else scenario_id
@@ -495,7 +495,7 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
 # HỆ THỐNG KHỞI TẠO CHỦ ĐỀ ĐÀM THOẠI ĐA DẠNG (TOPIC CONVERSATION ENGINE)
 # ==============================================================================
 
-def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3.5-flash-lite") -> dict:
+def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3.1-flash-lite") -> dict:
     """Khởi tạo cuộc trò chuyện mở đầu sinh động về bất kỳ chủ đề đàm thoại nào được chọn."""
     t_clean = (topic or "").strip().lower()
     if not t_clean or t_clean in ["free", "casual daily talk", "随心日常闲聊", "trò chuyện tự do", "tán gẫu", "tự do"]:
