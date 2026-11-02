@@ -137,11 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 1. SETUP SPEECH RECOGNITION (Web Speech API - Nhận diện thông minh & chống nhảy chữ)
+  // 1. SETUP SPEECH RECOGNITION (Web Speech API - Nhận diện tức thì & siêu tốc)
+  const isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   let accumulatedTranscript = '';
   let currentInterimText = '';
   let silenceTimer = null;
-  const SILENCE_TIMEOUT_MS = 2200; // 2.2 giây đệm khoảng lặng để người học nghỉ lấy hơi, không bị nhảy chữ ngắt ngang
+  // Đệm khoảng lặng tối ưu: 1.0 giây trên mobile để gửi phản xạ nhanh, 1.4 giây trên máy tính
+  const SILENCE_TIMEOUT_MS = isMobileDevice ? 1000 : 1400;
 
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -151,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    // Trên di động, continuous=false loại bỏ 100% tình trạng Android đệm trễ audio, giúp chữ hiện ra ngay tức khắc
+    recognition.continuous = !isMobileDevice;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
@@ -182,9 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (fullSpokenText) {
         // Cập nhật chữ tức thì lên ô nhập để người học nhìn thấy chính xác nội dung đang nói
         inputCustomText.value = fullSpokenText;
-        recordingText.innerHTML = `🎙️ Đang nghe: <b>"${escapeHtml(fullSpokenText)}"</b> <span style="opacity:0.8; font-size:0.75rem;">(Nói tiếp hoặc bấm Mic để gửi)</span>`;
+        recordingText.innerHTML = `🎙️ <span style="color:#93c5fd; font-weight:600;">"${escapeHtml(fullSpokenText)}"</span> <span class="send-badge-tap" style="background:#2563eb; color:#ffffff; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-left:6px; font-weight:500; cursor:pointer;">⚡ Gửi ngay</span>`;
 
-        // Đệm khoảng lặng 2.2s: Chờ người học nói tiếp câu gợi ý mà không bị ngắt ngang giữa chừng
+        // Đệm khoảng lặng phản xạ nhanh
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
           if (isRecording && (accumulatedTranscript || currentInterimText).trim()) {
@@ -228,6 +231,8 @@ document.addEventListener('DOMContentLoaded', () => {
     accumulatedTranscript = '';
     currentInterimText = '';
     recognition.lang = (currentLang === 'zh') ? 'zh-CN' : 'en-US';
+    recognition.continuous = !isMobileDevice;
+    recognition.interimResults = true;
     try {
       recognition.start();
     } catch (e) {
@@ -256,6 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
     btnMic.title = "Nhấn để bắt đầu nói";
     recordingStatus.style.display = 'none';
     if (silenceTimer) clearTimeout(silenceTimer);
+  }
+
+  if (recordingStatus) {
+    recordingStatus.style.cursor = 'pointer';
+    recordingStatus.title = "Chạm vào đây để gửi câu nói ngay";
+    recordingStatus.addEventListener('click', () => {
+      if (isRecording) {
+        finishAndSendSpeech();
+      }
+    });
   }
 
   btnMic.addEventListener('click', () => {
