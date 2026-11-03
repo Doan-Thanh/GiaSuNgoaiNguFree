@@ -66,6 +66,7 @@ async def ping_keep_alive():
     """Endpoint siêu nhẹ phục vụ Keep-Alive, không ghi nhận visit ảo vào analytics"""
     return {"status": "awake", "service": "GiaSuNgoaiNguFree", "timestamp": time.time()}
 
+@app.post("/api/app/pulse")
 @app.post("/api/analytics/event")
 async def track_client_event(request: Request, payload: dict = Body(...)):
     """Tiếp nhận sự kiện tương tác chủ động từ client JavaScript"""

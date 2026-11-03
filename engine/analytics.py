@@ -43,8 +43,9 @@ DEFAULT_STATS = {
 }
 
 BOT_KEYWORDS = (
-    "bot", "crawl", "spider", "preview", "facebookexternalhit",
-    "slackbot", "uptime", "monitor", "keepalive", "curl", "wget", "headlesschrome"
+    "googlebot", "bingbot", "yandexbot", "baiduspider", "duckduckbot",
+    "facebookexternalhit", "slackbot", "twitterbot", "telegrambot",
+    "uptime", "monitor", "keepalive", "curl/", "wget/", "headlesschrome"
 )
 
 def _get_today_str():

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const userLang = (typeof currentLang !== 'undefined' && currentLang) ? currentLang : (localStorage.getItem('user_lang') || 'en');
       const langLabel = userLang === 'zh' ? '🇨🇳 Tiếng Trung' : '🇬🇧 Tiếng Anh';
-      fetch('/api/analytics/event', {
+      fetch('/api/app/pulse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
