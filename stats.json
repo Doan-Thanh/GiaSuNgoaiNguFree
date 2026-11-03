@@ -1,14 +1,14 @@
 {
   "started_at": "2026-11-01 19:26:56",
   "last_active": "2026-11-02 20:06:02",
-  "total_visits": 55,
-  "visits_today": 53,
-  "unique_users_count": 14,
-  "total_chats": 107,
-  "chats_today": 105,
+  "total_visits": 28,
+  "visits_today": 27,
+  "unique_users_count": 6,
+  "total_chats": 65,
+  "chats_today": 64,
   "chats_by_lang": {
-    "en": 73,
-    "zh": 34
+    "en": 49,
+    "zh": 16
   },
   "chats_by_scenario": {
     "free_zh": 2,
@@ -24,16 +24,16 @@
     "Cà Phê & Quán Xá": 1
   },
   "devices": {
-    "mobile": 24,
-    "desktop": 31
+    "mobile": 12,
+    "desktop": 16
   },
   "daily_visits": {
-    "2026-11-01": 2,
-    "2026-11-02": 53
+    "2026-11-01": 1,
+    "2026-11-02": 27
   },
   "daily_chats": {
     "2026-11-01": 1,
-    "2026-11-02": 105
+    "2026-11-02": 64
   },
   "recent_activities": [
     {
@@ -246,5 +246,14 @@
       "type": "chat",
       "desc": "Luyện nói 🇨🇳 Tiếng Trung • Tình huống: free"
     }
-  ]
+  ],
+  "total_listens": 42,
+  "listens_today": 42,
+  "listens_by_lang": {
+    "en": 24,
+    "zh": 18
+  },
+  "daily_listens": {
+    "2026-11-02": 42
+  }
 }

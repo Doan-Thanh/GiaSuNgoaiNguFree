@@ -19,6 +19,7 @@ DEFAULT_STATS = {
     "last_active": datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S"),
     "total_visits": 0,
     "total_chats": 0,
+    "total_listens": 0,
     "unique_users_count": 0,
     "unique_users": [],
     "sessions_today": {},
@@ -26,9 +27,14 @@ DEFAULT_STATS = {
         "en": 0,
         "zh": 0
     },
+    "listens_by_lang": {
+        "en": 0,
+        "zh": 0
+    },
     "chats_by_scenario": {},
     "daily_visits": {},
     "daily_chats": {},
+    "daily_listens": {},
     "devices": {
         "mobile": 0,
         "desktop": 0
@@ -69,39 +75,14 @@ def _save_stats(data):
         logger.error(f"Lỗi lưu stats.json: {e}")
 
 def record_visit(user_agent: str = ""):
-    """Ghi nhận lượt truy cập trực tiếp từ server (kèm lọc bot/crawler)"""
+    """Cập nhật trạng thái hoạt động từ server, tránh đếm đúp vì client session beacon đã đếm chính xác từng phiên"""
     ua_lower = (user_agent or "").lower()
     if any(b in ua_lower for b in BOT_KEYWORDS):
         return
 
     with _lock:
         data = _load_stats()
-        today = _get_today_str()
-        now = _get_now_str()
-
-        data["total_visits"] = data.get("total_visits", 0) + 1
-        data["last_active"] = now
-
-        daily = data.setdefault("daily_visits", {})
-        daily[today] = daily.get(today, 0) + 1
-
-        devices = data.setdefault("devices", {"mobile": 0, "desktop": 0})
-        if any(kw in ua_lower for kw in ["iphone", "android", "mobile", "ipad"]):
-            devices["mobile"] = devices.get("mobile", 0) + 1
-            device_type = "📱 Điện thoại"
-        else:
-            devices["desktop"] = devices.get("desktop", 0) + 1
-            device_type = "💻 Máy tính"
-
-        recent = data.setdefault("recent_activities", [])
-        recent.insert(0, {
-            "time": datetime.now(VN_TZ).strftime("%H:%M:%S"),
-            "date": today,
-            "type": "visit",
-            "desc": f"Mở ứng dụng ({device_type})"
-        })
-        data["recent_activities"] = recent[:35]
-
+        data["last_active"] = _get_now_str()
         _save_stats(data)
 
 def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = "", lang: str = "en"):
@@ -167,18 +148,19 @@ def record_client_event(event_type: str = "visit", details: str = "", user_id: s
         _save_stats(data)
 
 def record_listen(lang: str, text: str):
-    """Ghi nhận lượt nghe phát âm mẫu"""
+    """Ghi nhận lượt nghe phát âm mẫu (tách riêng, KHÔNG cộng vào total_chats)"""
     with _lock:
         data = _load_stats()
         today = _get_today_str()
         now = _get_now_str()
 
         data["last_active"] = now
-        by_lang = data.setdefault("chats_by_lang", {"en": 0, "zh": 0})
-        by_lang[lang] = by_lang.get(lang, 0) + 1
-        data["total_chats"] = data.get("total_chats", 0) + 1
+        data["total_listens"] = data.get("total_listens", 0) + 1
 
-        daily = data.setdefault("daily_chats", {})
+        by_lang = data.setdefault("listens_by_lang", {"en": 0, "zh": 0})
+        by_lang[lang] = by_lang.get(lang, 0) + 1
+
+        daily = data.setdefault("daily_listens", {})
         daily[today] = daily.get(today, 0) + 1
 
         short_text = text[:32] + ("..." if len(text) > 32 else "")
@@ -232,12 +214,11 @@ def get_stats_summary():
         
         visits_today = data.get("daily_visits", {}).get(today, 0)
         chats_today = data.get("daily_chats", {}).get(today, 0)
+        listens_today = data.get("daily_listens", {}).get(today, 0)
         unique_users_count = data.get("unique_users_count", len(data.get("unique_users", [])))
         
         today_u_list = data.get("daily_unique_users", {}).get(today, [])
         users_today_count = len(today_u_list)
-        if users_today_count == 0 and visits_today > 0:
-            users_today_count = min(visits_today, max(1, len(today_u_list)))
 
         return {
             "started_at": data.get("started_at"),
@@ -245,13 +226,17 @@ def get_stats_summary():
             "total_visits": data.get("total_visits", 0),
             "visits_today": visits_today,
             "users_today": users_today_count,
-            "unique_users_count": max(unique_users_count, 1 if visits_today > 0 else 0),
+            "unique_users_count": unique_users_count,
             "total_chats": data.get("total_chats", 0),
             "chats_today": chats_today,
+            "total_listens": data.get("total_listens", 0),
+            "listens_today": listens_today,
+            "listens_by_lang": data.get("listens_by_lang", {"en": 0, "zh": 0}),
             "chats_by_lang": data.get("chats_by_lang", {"en": 0, "zh": 0}),
             "chats_by_scenario": data.get("chats_by_scenario", {}),
             "devices": data.get("devices", {"mobile": 0, "desktop": 0}),
             "daily_visits": data.get("daily_visits", {}),
             "daily_chats": data.get("daily_chats", {}),
+            "daily_listens": data.get("daily_listens", {}),
             "recent_activities": data.get("recent_activities", [])
         }

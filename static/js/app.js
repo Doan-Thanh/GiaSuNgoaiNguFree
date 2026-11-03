@@ -42,9 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Kích hoạt beacon ngay khi mở ứng dụng
   sendAnalyticsEvent('visit');
 
+  let lastActiveBeaconTime = Date.now();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      sendAnalyticsEvent('active', 'Quay lại học');
+      const now = Date.now();
+      // Chỉ gửi lại sự kiện nếu người học rời đi hơn 15 phút
+      if (now - lastActiveBeaconTime > 15 * 60 * 1000) {
+        lastActiveBeaconTime = now;
+        sendAnalyticsEvent('active', 'Quay lại học');
+      }
     }
   });
 

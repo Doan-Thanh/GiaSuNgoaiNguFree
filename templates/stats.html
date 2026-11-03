@@ -116,6 +116,7 @@
     }
     .kpi-card.visits::before { background: var(--accent-blue); }
     .kpi-card.chats::before { background: var(--accent-green); }
+    .kpi-card.listens::before { background: var(--accent-amber); }
     .kpi-card.lang-en::before { background: #38bdf8; }
     .kpi-card.lang-zh::before { background: var(--accent-rose); }
 
@@ -318,7 +319,13 @@
       <div class="kpi-card chats">
         <div class="kpi-title">💬 Lượt Luyện Nói AI</div>
         <div class="kpi-value" id="val-total-chats" style="color:var(--accent-green);">0</div>
-        <div class="kpi-sub">Hôm nay: <b id="val-today-chats">0</b> câu</div>
+        <div class="kpi-sub">Hôm nay: <b id="val-today-chats">0</b> câu hội thoại</div>
+      </div>
+
+      <div class="kpi-card listens">
+        <div class="kpi-title">🔊 Lượt Nghe Phát Âm Mẫu</div>
+        <div class="kpi-value" id="val-total-listens" style="color:var(--accent-amber);">0</div>
+        <div class="kpi-sub">Hôm nay: <b id="val-today-listens">0</b> lượt nghe loa</div>
       </div>
 
       <div class="kpi-card lang-en">
@@ -457,6 +464,10 @@
       if (elUnique) elUnique.textContent = uniqueCount.toLocaleString();
       document.getElementById('val-total-chats').textContent = (data.total_chats || 0).toLocaleString();
       document.getElementById('val-today-chats').textContent = (data.chats_today || 0).toLocaleString();
+      const elListens = document.getElementById('val-total-listens');
+      if (elListens) elListens.textContent = (data.total_listens || 0).toLocaleString();
+      const elTodayListens = document.getElementById('val-today-listens');
+      if (elTodayListens) elTodayListens.textContent = (data.listens_today || 0).toLocaleString();
 
       const en = data.chats_by_lang?.en || 0;
       const zh = data.chats_by_lang?.zh || 0;
