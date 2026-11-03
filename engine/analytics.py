@@ -113,14 +113,19 @@ def record_client_event(event_type: str = "visit", details: str = "", user_id: s
 
         data["last_active"] = now
 
-        # Theo dõi người dùng độc nhất (Unique User)
+        # Theo dõi người dùng độc nhất (Unique User) toàn thời gian & theo ngày
         if user_id:
             users_list = data.setdefault("unique_users", [])
             if user_id not in users_list:
                 users_list.append(user_id)
-                if len(users_list) > 1000:
+                if len(users_list) > 2000:
                     users_list.pop(0)
             data["unique_users_count"] = max(data.get("unique_users_count", 0), len(users_list))
+
+            daily_users = data.setdefault("daily_unique_users", {})
+            today_users = daily_users.setdefault(today, [])
+            if user_id not in today_users:
+                today_users.append(user_id)
 
         # Theo dõi phiên (Session): Mỗi phiên mới tính 1 visit chính xác
         is_new_session = False
@@ -229,11 +234,17 @@ def get_stats_summary():
         chats_today = data.get("daily_chats", {}).get(today, 0)
         unique_users_count = data.get("unique_users_count", len(data.get("unique_users", [])))
         
+        today_u_list = data.get("daily_unique_users", {}).get(today, [])
+        users_today_count = len(today_u_list)
+        if users_today_count == 0 and visits_today > 0:
+            users_today_count = min(visits_today, max(1, len(today_u_list)))
+
         return {
             "started_at": data.get("started_at"),
             "last_active": data.get("last_active"),
             "total_visits": data.get("total_visits", 0),
             "visits_today": visits_today,
+            "users_today": users_today_count,
             "unique_users_count": max(unique_users_count, 1 if visits_today > 0 else 0),
             "total_chats": data.get("total_chats", 0),
             "chats_today": chats_today,
