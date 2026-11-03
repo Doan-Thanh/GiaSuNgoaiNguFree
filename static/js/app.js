@@ -137,13 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 1. SETUP SPEECH RECOGNITION (Web Speech API - Nhận diện tức thì & siêu tốc)
+  // 1. SETUP SPEECH RECOGNITION (Web Speech API - Nhận diện thông minh, chống cướp lời & dọn sạch ô nhập)
   const isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   let accumulatedTranscript = '';
   let currentInterimText = '';
   let silenceTimer = null;
-  // Đệm khoảng lặng tối ưu: 1.0 giây trên mobile để gửi phản xạ nhanh, 1.4 giây trên máy tính
-  const SILENCE_TIMEOUT_MS = isMobileDevice ? 1000 : 1400;
+  // Đệm khoảng lặng 2.5 giây: Dành trọn không gian cho người học nghỉ lấy hơi, ngắt nhịp đọc trọn vẹn câu gợi ý dài
+  const SILENCE_TIMEOUT_MS = 2500;
 
   function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -153,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     recognition = new SpeechRecognition();
-    // Trên di động, continuous=false loại bỏ 100% tình trạng Android đệm trễ audio, giúp chữ hiện ra ngay tức khắc
-    recognition.continuous = !isMobileDevice;
+    // Luôn giữ continuous=true để không bị trình duyệt tự ngắt khi người học ngập ngừng lấy hơi đọc câu dài
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
@@ -166,11 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
       btnMic.title = "Nhấn để hoàn tất và gửi câu nói ngay";
       recordingStatus.style.display = 'flex';
       recordingText.innerHTML = currentLang === 'zh'
-        ? '🎙️ <b>Đang lắng nghe tiếng Trung...</b> Hãy nói tự nhiên, không sợ ngập ngừng!'
-        : '🎙️ <b>Listening...</b> Speak at your natural pace, no rush!';
+        ? '🎙️ <b>Đang lắng nghe tiếng Trung...</b> Nói tự nhiên, dừng lấy hơi thoải mái!'
+        : '🎙️ <b>Listening...</b> Speak naturally, take your time!';
     };
 
     recognition.onresult = (event) => {
+      // NẾU ĐÃ GỌI STOP HOẶC ĐÃ GỬI XONG: BỎ QUA HOÀN TOÀN CÁC EVENT RÁC TRÁNH GHI ĐÈ LẠI VÀO Ô NHẬP
+      if (!isRecording) return;
+
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
@@ -183,11 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const fullSpokenText = (accumulatedTranscript + currentInterimText).trim();
       if (fullSpokenText) {
-        // Cập nhật chữ tức thì lên ô nhập để người học nhìn thấy chính xác nội dung đang nói
+        // Cập nhật chữ tức thì lên ô nhập để người học nhìn thấy nội dung đang nói
         inputCustomText.value = fullSpokenText;
         recordingText.innerHTML = `🎙️ <span style="color:#93c5fd; font-weight:600;">"${escapeHtml(fullSpokenText)}"</span> <span class="send-badge-tap" style="background:#2563eb; color:#ffffff; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-left:6px; font-weight:500; cursor:pointer;">⚡ Gửi ngay</span>`;
 
-        // Đệm khoảng lặng phản xạ nhanh
+        // Đệm khoảng lặng 2.5s: Chờ người học nói hết toàn bộ câu gợi ý dài mà không bị cướp lời ngắt ngang
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
           if (isRecording && (accumulatedTranscript || currentInterimText).trim()) {
@@ -210,7 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     recognition.onend = () => {
       if (isRecording) {
-        const candidate = (accumulatedTranscript + currentInterimText).trim();
+        // Nếu người học đang nói mà browser tự dừng (do ngắt tạm thời audio):
+        // Nếu silenceTimer vẫn đang chạy -> Khởi động lại để người học nói tiếp câu dài
+        if (silenceTimer) {
+          try {
+            recognition.start();
+            return;
+          } catch (e) {
+            // Không start lại được thì tiến hành gửi
+          }
+        }
+        const candidate = (accumulatedTranscript + currentInterimText).trim() || inputCustomText.value.trim();
         if (candidate) {
           finishAndSendSpeech();
         } else {
@@ -227,11 +240,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (isRecording) return;
 
-    if (silenceTimer) clearTimeout(silenceTimer);
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
     accumulatedTranscript = '';
     currentInterimText = '';
+    inputCustomText.value = ''; // Chuẩn bị ô nhập trống tinh
     recognition.lang = (currentLang === 'zh') ? 'zh-CN' : 'en-US';
-    recognition.continuous = !isMobileDevice;
+    recognition.continuous = true;
     recognition.interimResults = true;
     try {
       recognition.start();
@@ -243,12 +260,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function finishAndSendSpeech() {
-    if (silenceTimer) clearTimeout(silenceTimer);
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
     const spoken = (accumulatedTranscript + currentInterimText).trim() || inputCustomText.value.trim();
+    
+    // Ngắt nhận diện trước để triệt tiêu mọi trailing onresult event
     stopRecording();
     try {
       recognition.stop();
     } catch (e) {}
+
+    // BẮT BUỘC: Xóa sạch 100% ô nhập để chuẩn bị cho câu nói mới
+    inputCustomText.value = '';
 
     if (spoken) {
       sendUserMessage(spoken);
@@ -260,7 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnMic.classList.remove('recording');
     btnMic.title = "Nhấn để bắt đầu nói";
     recordingStatus.style.display = 'none';
-    if (silenceTimer) clearTimeout(silenceTimer);
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+    accumulatedTranscript = '';
+    currentInterimText = '';
   }
 
   if (recordingStatus) {
@@ -748,6 +778,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderSuggestions(data.suggested_replies || []);
+    if (!isRecording) {
+      inputCustomText.value = '';
+    }
     setTimeout(() => {
       const rowTop = row.offsetTop;
       const targetScroll = Math.max(0, rowTop - 12);
