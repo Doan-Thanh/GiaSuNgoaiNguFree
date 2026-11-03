@@ -40,6 +40,67 @@ SCENARIOS = {
     ]
 }
 
+VI_ACCENTS = "àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđĐ"
+
+def sanitize_ai_result(result: dict, lang: str, topic: str = "free") -> dict:
+    """Bộ lọc kiểm toán ngôn ngữ tuyệt đối: Ngăn chặn triệt để hiện tượng AI nhầm lẫn hoặc rò rỉ ngôn ngữ chéo."""
+    if not isinstance(result, dict):
+        return result
+
+    if lang == "en":
+        # 1. Diệt trừ triệt để việc nhắc nhầm tiếng Trung trong bài học tiếng Anh
+        fb = result.get("feedback", "")
+        if fb:
+            bad_words = ["tiếng Trung", "tiếng Hoa", "tiếng Hán", "bằng tiếng Trung", "bằng tiếng Hoa", "nói tiếng Trung", "nói tiếng Hoa"]
+            for bw in bad_words:
+                fb = fb.replace(bw, "tiếng Anh")
+            result["feedback"] = fb
+
+        # 2. Đảm bảo 'reply' là 100% tiếng Anh, không bị AI nhét tiếng Việt vào ô 'reply'
+        reply = (result.get("reply") or "").strip()
+        vi_count = sum(1 for c in reply if c in VI_ACCENTS)
+        if not reply or vi_count >= 3:
+            # AI trả lời nhầm bằng tiếng Việt vào ô reply tiếng Anh
+            logger.warning(f"Phát hiện reply tiếng Anh bị lẫn tiếng Việt ('{reply[:30]}...'), tiến hành tự động hiệu chỉnh.")
+            if vi_count >= 3 and not result.get("translation_vi"):
+                result["translation_vi"] = reply
+            offline = get_topic_offline_opener(topic, "en")
+            result["reply"] = offline.get("reply", "Hey there! How is your day going so far? What have you been up to today?")
+            result["reply_ipa"] = offline.get("reply_ipa", "/heɪ ðɛr! haʊ ɪz jʊər deɪ ˈɡoʊɪŋ soʊ fɑːr? wʌt hæv juː biːn ʌp tuː təˈdeɪ?/")
+            if not result.get("translation_vi"):
+                result["translation_vi"] = offline.get("translation_vi", "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Hôm nay bạn đã làm những gì rồi?")
+
+        # Đảm bảo có gợi ý đàm thoại tiếng Anh
+        if not result.get("suggested_replies") or not isinstance(result["suggested_replies"], list) or len(result["suggested_replies"]) == 0:
+            offline = get_topic_offline_opener(topic, "en")
+            result["suggested_replies"] = offline.get("suggested_replies", [])
+
+    elif lang == "zh":
+        # 1. Diệt trừ triệt để việc nhắc nhầm tiếng Anh trong bài học tiếng Trung
+        fb = result.get("feedback", "")
+        if fb:
+            bad_words = ["tiếng Anh", "bằng tiếng Anh", "nói tiếng Anh"]
+            for bw in bad_words:
+                fb = fb.replace(bw, "tiếng Trung")
+            result["feedback"] = fb
+
+        # 2. Đảm bảo 'reply_hanzi' phải có chữ Hán
+        hanzi = (result.get("reply_hanzi") or "").strip()
+        has_cjk = any('\u4e00' <= c <= '\u9fff' for c in hanzi)
+        if not hanzi or not has_cjk:
+            logger.warning("Phát hiện reply tiếng Trung thiếu chữ Hán, tiến hành tự động hiệu chỉnh.")
+            offline = get_topic_offline_opener(topic, "zh")
+            result["reply_hanzi"] = offline.get("reply_hanzi", "你好呀！今天过得怎么样？很高兴能和你一起轻松聊聊天！")
+            result["reply_pinyin"] = offline.get("reply_pinyin", "Nǐ hǎo ya! Jīntiān guò de zěnmeyàng? Hěn gāoxìng néng hé nǐ yìqǐ qīngsōng liáoliáo tiān!")
+            if not result.get("translation_vi"):
+                result["translation_vi"] = offline.get("translation_vi", "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Rất vui được thoải mái trò chuyện cùng bạn!")
+
+        if not result.get("suggested_replies") or not isinstance(result["suggested_replies"], list) or len(result["suggested_replies"]) == 0:
+            offline = get_topic_offline_opener(topic, "zh")
+            result["suggested_replies"] = offline.get("suggested_replies", [])
+
+    return result
+
 def call_gemini_api(api_key: str, history: list, system_instruction: str = "", preferred_model: str = "gemini-3.1-flash-lite") -> str:
     """Gọi trực tiếp Google Gemini API qua REST v1beta với model tối ưu tốc độ phản hồi."""
     candidate_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite-preview", "gemini-flash-lite-latest"]
@@ -165,7 +226,7 @@ YOUR TASKS:
     try:
         raw_res = call_gemini_api(api_key, clean_history, system_inst, preferred_model=preferred_model)
         parsed = json.loads(raw_res)
-        return parsed
+        return sanitize_ai_result(parsed, lang, scenario_id)
     except Exception as e:
         logger.warning(f"Gemini API không phản hồi ({e}), chuyển sang động cơ mô phỏng ngữ cảnh linh động.")
         return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count, error_note=str(e))
@@ -499,49 +560,97 @@ def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferr
     """Khởi tạo cuộc trò chuyện mở đầu sinh động về bất kỳ chủ đề đàm thoại nào được chọn."""
     t_clean = (topic or "").strip().lower()
     if not t_clean or t_clean in ["free", "casual daily talk", "随心日常闲聊", "trò chuyện tự do", "tán gẫu", "tự do"]:
-        topic_display = "日常随心闲聊 (Casual Daily Talk)" if lang == "zh" else "Casual Daily Talk (Trò chuyện tự do)"
+        topic_display = "日常随心闲聊" if lang == "zh" else "Casual Daily Talk"
     else:
         topic_display = topic.strip()
+        # Loại bỏ các ngoặc đơn đa ngữ để không làm LLM nhầm lẫn ngôn ngữ mục tiêu
+        topic_display = re.sub(r'[\(（].*?[\)）]', '', topic_display).strip()
 
     if api_key:
         try:
             if lang == "zh":
-                prompt_text = f"""你是一位热情、幽默的中国母语中文语伴（北京标准口音）。
-用户刚选择了日常口语交流主题：“{topic_display}”。
+                prompt_text = f"""你是一位热情、幽默的中国母语中文语伴（标准普通话口音）。
+用户是一位正在练习中文口语交流的越南学习者。
+交流主题：“{topic_display}”。
 
-任务：
-请自然且简短地开场（1-2句话）。对主题“{topic_display}”做一个接地气、生动的开场白，并提出一个开放式的好问题引发交流。
+严格语言规范（VÔ CÙNG QUAN TRỌNG）：
+1. 目标学习语言：标准中文普通话。
+2. "reply_hanzi": 必须是100%地道简体中文（1-2句话），必须以一个好问题结尾。严禁在此输出越南语或英语！
+3. "reply_pinyin": 拼音带完整声调。
+4. "translation_vi": 越南语自然流畅翻译。
+5. "feedback": 简短鼓励提示（越南语），鼓励用户大胆开口练习说中文（严禁提及英语 / tiếng Anh！）。
+6. "suggested_replies": 3个具体的中文回复建议，直接回答你刚才提出的问题，格式严格为："中文句子 (拼音 - 越南语翻译)"。
 
-严格输出JSON格式：
-- "reply_hanzi": 中文开场白（简体中文，1-2句话，必须以一个好问题结尾）。
-- "reply_pinyin": 拼音带完整声调。
-- "translation_vi": 越南语自然流畅翻译。
-- "feedback": 简短鼓励提示（越南语），鼓励用户大胆开口练习。
-- "suggested_replies": 3个具体的回复建议，直接回答你刚才提出的问题，格式严格为："中文句子 (拼音 - 越南语翻译)"。"""
+严格JSON输出：
+{{
+  "reply_hanzi": "中文开场白",
+  "reply_pinyin": "pīnyīn",
+  "translation_vi": "bản dịch tiếng Việt",
+  "feedback": "lời khuyên học tiếng Trung",
+  "suggested_replies": ["句1 (拼音 - Dịch)", "句2 (拼音 - Dịch)", "句3 (拼音 - Dịch)"]
+}}"""
             else:
                 prompt_text = f"""You are an enthusiastic, warm native English conversational tutor.
-The user just selected this daily conversation topic: "{topic_display}".
+The user is a Vietnamese student practicing SPOKEN ENGLISH.
+Conversation topic: "{topic_display}".
 
-TASK:
-Open the conversation naturally and concisely (1-2 sentences). Share a quick relatable remark about "{topic_display}" and ask an engaging open-ended question to kick off the talk.
+CRITICAL LANGUAGE CONSTRAINTS (VÔ CÙNG QUAN TRỌNG):
+1. TARGET PRACTICE LANGUAGE: ENGLISH ONLY.
+2. "reply": MUST BE 100% IN NATURAL, VIBRANT ENGLISH (1-2 sentences), concluding with an engaging open-ended question. NEVER output Vietnamese or Chinese here!
+3. "reply_ipa": International Phonetic Alphabet (IPA) transcription of your English reply in slashes, e.g. "/.../".
+4. "translation_vi": Natural Vietnamese translation of your English reply.
+5. "feedback": Welcoming tip in Vietnamese encouraging the learner to speak ENGLISH freely and confidently (STRICTLY FORBIDDEN to mention Chinese / tiếng Trung / tiếng Hoa!).
+6. "suggested_replies": Exactly 3 conversational phrases in English the student can say to answer your question. Each formatted strictly as: "English sentence (/IPA/ - Dịch tiếng Việt)".
 
-Provide strictly valid JSON format:
-- "reply": Your English opening message (1-2 sentences, must conclude with an engaging question).
-- "reply_ipa": International Phonetic Alphabet (IPA) transcription of your reply enclosed in slashes, e.g. "/.../".
-- "translation_vi": Natural Vietnamese translation of your reply.
-- "feedback": Welcoming tip in Vietnamese encouraging the learner to speak freely.
-- "suggested_replies": Array of 3 natural, specific conversational phrases the user can say to directly reply to your question. Each formatted strictly as: "English sentence (/IPA/ - Dịch tiếng Việt)"."""
+STRICT JSON OUTPUT:
+{{
+  "reply": "English opening statement ending with a question",
+  "reply_ipa": "/IPA transcription/",
+  "translation_vi": "Bản dịch tiếng Việt",
+  "feedback": "Lời khuyên luyện nói tiếng Anh bằng tiếng Việt",
+  "suggested_replies": ["English phrase 1 (/IPA/ - Dịch)", "English phrase 2 (/IPA/ - Dịch)", "English phrase 3 (/IPA/ - Dịch)"]
+}}"""
 
             single_turn_history = [{"role": "user", "content": prompt_text}]
             raw_res = call_gemini_api(api_key, single_turn_history, preferred_model=preferred_model)
             parsed = json.loads(raw_res)
-            return parsed
+            return sanitize_ai_result(parsed, lang, topic)
         except Exception as e:
             logger.warning(f"Lỗi khởi tạo chủ đề qua Gemini: {e}")
 
     # Fallback ngoại tuyến sinh động theo chủ đề
-    return get_topic_offline_opener(topic, lang)
+    fallback = get_topic_offline_opener(topic, lang)
+    return sanitize_ai_result(fallback, lang, topic)
 
 def get_topic_offline_opener(topic: str, lang: str = "en") -> dict:
-    t = topic.lower()
-    return get_dynamic_offline_response("start_opener", lang, t)
+    t = (topic or "").strip().lower()
+    is_free = not t or t in ["free", "start_opener", "casual daily talk", "随心日常闲聊", "trò chuyện tự do", "tán gẫu", "tự do"]
+
+    if lang == "zh":
+        if is_free:
+            return {
+                "reply_hanzi": "你好呀！今天过得怎么样？很高兴能和你一起轻松聊聊天，最近有什么新鲜好玩的事吗？",
+                "reply_pinyin": "Nǐ hǎo ya! Jīntiān guò de zěnmeyàng? Hěn gāoxìng néng hé nǐ yìqǐ qīngsōng liáoliáo tiān, zuìjìn yǒu shénme xīnxiān hǎowán de shì ma?",
+                "translation_vi": "Chào bạn! Hôm nay bạn thế nào rồi? Rất vui vì được thoải mái trò chuyện cùng bạn, dạo này có chuyện gì mới lạ hay ho không?",
+                "feedback": "Cố gắng lên nhé! Đừng sợ sai, cứ thoải mái chia sẻ những câu chuyện thường ngày bằng tiếng Trung nha.",
+                "suggested_replies": [
+                    "我今天过得挺好的，刚吃完一顿美味的午饭 (Wǒ jīntiān guò de tǐng hǎo de, gāng chī wán yí dùn měiwèi de wǔfàn - Hôm nay tôi thấy rất ổn, vừa ăn xong một bữa trưa ngon miệng)",
+                    "今天工作有点忙，不过下班后打算去散散步 (Jīntiān gōngzuò yǒudiǎn máng, búguò xiàbān hòu dǎsuàn qù sànsanbù - Hôm nay công việc hơi bận, nhưng tan làm tôi tính đi dạo)",
+                    "最近看了部很有意思的电影，你今天过得好吗？ (Zuìjìn kàn le bù hěn yǒu yìsi de diànyǐng, nǐ jīntiān guò de hǎo ma? - Dạo này tôi xem được bộ phim rất hay, hôm nay bạn thế nào?)"
+                ]
+            }
+        return get_dynamic_offline_response("start_opener", "zh", t)
+    else:
+        if is_free:
+            return {
+                "reply": "Hey there! How is your day going so far? I'm so glad we have some time to chat today, what have you been up to?",
+                "reply_ipa": "/heɪ ðɛr! haʊ ɪz jʊər deɪ ˈɡoʊɪŋ soʊ fɑːr? aɪm soʊ ɡlæd wiː hæv səm taɪm tuː tʃæt təˈdeɪ, wʌt hæv juː biːn ʌp tuː?/",
+                "translation_vi": "Chào bạn! Ngày hôm nay của bạn thế nào rồi? Rất vui vì chúng ta có thời gian trò chuyện hôm nay, hôm nay bạn đã làm những gì rồi?",
+                "feedback": "Chào mừng bạn! Hãy tự tin nói tiếng Anh tự nhiên nhé, đừng ngại ngập ngừng hay sợ sai sót.",
+                "suggested_replies": [
+                    "My day has been pretty good and relaxing so far. (/maɪ deɪ hæz biːn ˈprɪti ɡʊd ænd rɪˈlæksɪŋ soʊ fɑːr/ - Ngày hôm nay của tôi khá tốt và thư thả.)",
+                    "I've been quite busy with work, but really happy to chat now. (/aɪv biːn kwaɪt ˈbɪzi wɪð wɜːrk, bʌt ˈriːəli ˈhæpi tuː tʃæt naʊ/ - Tôi khá bận với công việc, nhưng rất vui vì được trò chuyện lúc này.)",
+                    "Just finished learning something new today, how about you? (/dʒʌst ˈfɪnɪʃt ˈlɜːrnɪŋ ˈsʌmθɪŋ nuː təˈdeɪ, haʊ əˈbaʊt juː? - Tôi vừa học xong một điều mới mẻ hôm nay, còn bạn thì sao?)"
+                ]
+            }
+        return get_dynamic_offline_response("start_opener", "en", t)
