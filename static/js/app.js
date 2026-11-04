@@ -1556,7 +1556,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnSaveSettings.addEventListener('click', async () => {
     const geminiApiKey = inputApiKey.value.trim();
-    const geminiModel = selectModel ? selectModel.value : 'gemini-3.5-flash-lite';
+    const geminiModel = selectModel ? selectModel.value : 'gemini-3-flash-preview';
     const voiceEn = selectVoiceEn.value;
     const voiceZh = selectVoiceZh.value;
 

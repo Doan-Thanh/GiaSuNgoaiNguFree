@@ -101,9 +101,59 @@ def sanitize_ai_result(result: dict, lang: str, topic: str = "free") -> dict:
 
     return result
 
-def call_gemini_api(api_key: str, history: list, system_instruction: str = "", preferred_model: str = "gemini-3.1-flash-lite") -> str:
+def extract_json(raw_text: str) -> dict:
+    """Trích xuất và giải mã JSON an toàn tuyệt đối từ chuỗi phản hồi LLM."""
+    raw_text = (raw_text or "").strip()
+    try:
+        return json.loads(raw_text)
+    except Exception:
+        pass
+
+    # Loại bỏ code block markdown ```json ... ```
+    cleaned = re.sub(r'^```(?:json)?\s*', '', raw_text, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\s*```$', '', cleaned).strip()
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        pass
+
+    # Ghép ngoặc nhọn JSON (Bracket matching) bỏ qua rác/bình luận thừa ở sau
+    start_idx = raw_text.find('{')
+    if start_idx != -1:
+        brace_count = 0
+        in_string = False
+        escape = False
+        for i in range(start_idx, len(raw_text)):
+            c = raw_text[i]
+            if c == '"' and not escape:
+                in_string = not in_string
+            elif not in_string:
+                if c == '{':
+                    brace_count += 1
+                elif c == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        try:
+                            return json.loads(raw_text[start_idx:i+1])
+                        except Exception:
+                            pass
+            if c == '\\' and not escape:
+                escape = True
+            else:
+                escape = False
+
+    raise ValueError(f"Không thể phân tích cú pháp JSON từ dữ liệu: {raw_text[:200]}")
+
+def call_gemini_api(api_key: str, history: list, system_instruction: str = "", preferred_model: str = "gemini-3-flash-preview") -> str:
     """Gọi trực tiếp Google Gemini API qua REST v1beta với model tối ưu tốc độ phản hồi."""
-    candidate_models = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite-preview", "gemini-flash-lite-latest"]
+    candidate_models = [
+        "gemini-3-flash-preview",
+        "gemini-3.5-flash-lite",
+        "gemini-3.1-flash-lite",
+        "gemini-flash-latest",
+        "gemini-3.5-flash",
+        "gemini-flash-lite-latest"
+    ]
     models_to_try = [preferred_model] + [m for m in candidate_models if m != preferred_model]
     headers = {"Content-Type": "application/json"}
 
@@ -147,7 +197,7 @@ def call_gemini_api(api_key: str, history: list, system_instruction: str = "", p
 
     raise RuntimeError(f"Gemini API không phản hồi: {last_err}")
 
-def process_tutor_chat(api_key: str, user_text: str, lang: str, scenario_id: str, history: list = None, turn_count: int = 1, preferred_model: str = "gemini-3.1-flash-lite"):
+def process_tutor_chat(api_key: str, user_text: str, lang: str, scenario_id: str, history: list = None, turn_count: int = 1, preferred_model: str = "gemini-3-flash-preview"):
     """
     Xử lý phản hồi gia sư AI cho cả Tiếng Anh và Tiếng Trung, kèm hệ thống gợi ý cực kỳ linh động và chuẩn xác.
     """
@@ -164,7 +214,7 @@ def process_tutor_chat(api_key: str, user_text: str, lang: str, scenario_id: str
         clean_history.append({"role": "user", "content": user_text})
 
     if not api_key:
-        return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count)
+        return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count, history=clean_history)
 
     scenario_info = next((s for s in SCENARIOS.get(lang, []) if s["id"] == scenario_id), None)
     scenario_title = scenario_info.get("title", "") if scenario_info else scenario_id
@@ -225,13 +275,13 @@ YOUR TASKS:
 
     try:
         raw_res = call_gemini_api(api_key, clean_history, system_inst, preferred_model=preferred_model)
-        parsed = json.loads(raw_res)
+        parsed = extract_json(raw_res)
         return sanitize_ai_result(parsed, lang, scenario_id)
     except Exception as e:
         logger.warning(f"Gemini API không phản hồi ({e}), chuyển sang động cơ mô phỏng ngữ cảnh linh động.")
-        return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count, error_note=str(e))
+        return get_dynamic_offline_response(user_text, lang, scenario_id, turn_count, history=clean_history, error_note=str(e))
 
-def generate_fresh_suggestions(api_key: str, lang: str, scenario_id: str, history: list = None, preferred_model: str = "gemini-3.1-flash-lite") -> list:
+def generate_fresh_suggestions(api_key: str, lang: str, scenario_id: str, history: list = None, preferred_model: str = "gemini-3-flash-preview") -> list:
     """Tạo 3 câu gợi ý mới toanh khớp 100% với câu nói gần nhất của gia sư."""
     scenario_info = next((s for s in SCENARIOS.get(lang, []) if s["id"] == scenario_id), None)
     scenario_title = scenario_info.get("title", "") if scenario_info else scenario_id
@@ -276,34 +326,184 @@ Output strictly JSON: {{"suggested_replies": ["...", "...", "..."]}}"""
 
             single_turn_history = [{"role": "user", "content": prompt_text}]
             raw_res = call_gemini_api(api_key, single_turn_history, preferred_model=preferred_model)
-            parsed = json.loads(raw_res)
+            parsed = extract_json(raw_res)
             if "suggested_replies" in parsed and isinstance(parsed["suggested_replies"], list) and len(parsed["suggested_replies"]) > 0:
                 return parsed["suggested_replies"]
         except Exception as e:
             logger.warning(f"Không thể tạo gợi ý mới qua Gemini: {e}")
 
     # Fallback ngoại tuyến thông minh theo chủ đề
-    offline = get_dynamic_offline_response(last_bot_msg or "đổi gợi ý", lang, scenario_id, random.randint(1, 10))
+    offline = get_dynamic_offline_response(last_bot_msg or "đổi gợi ý", lang, scenario_id, random.randint(1, 10), history=history)
     return offline.get("suggested_replies", [])
 
 # ==============================================================================
 # HỆ THỐNG ĐỘNG CƠ GỢI Ý & PHẢN HỒI NỘI HÀM CỰC KỲ LINH ĐỘNG (OFFLINE ENGINE)
+# TÍCH HỢP XOAY VÒNG CHỦ ĐỀ & CƠ CHẾ CHỐNG LẶP HỘI THOẠI TUYỆT ĐỐI (ANTI-LOOP)
 # ==============================================================================
 
-def get_dynamic_offline_response(user_text: str, lang: str, scenario_id: str, turn_count: int = 1, error_note: str = None):
+DEFAULT_CHINESE_TURNS = [
+    {
+        "reply_hanzi": "哈哈，聊得太开心了！除了这个，你平时有什么特别感兴趣的爱好吗？",
+        "reply_pinyin": "Hāhā, liáo de tài kāixīn le! Chúle zhège, nǐ píngshí yǒu shénme tèbié gǎnxìngqù de àihào ma?",
+        "translation_vi": "Haha, trò chuyện cùng bạn vui quá! Ngoài điều này ra, bình thường bạn có sở thích nào đặc biệt đam mê không?",
+        "feedback": "Bạn đang giao tiếp rất tự nhiên và trôi chảy!",
+        "suggested_replies": [
+            "我平时很喜欢听音乐和跑步，能让人心情舒畅 (Wǒ píngshí hěn xǐhuan tīng yīnyuè hé pǎobù, néng ràng rén xīnqíng shūchàng - Bình thường tôi rất thích nghe nhạc và chạy bộ, giúp tâm trạng thư thái)",
+            "我挺喜欢摄影的，周末常去扫街拍照 (Wǒ tǐng xǐhuan shèyǐng de, zhōumò cháng qù sǎojiē pāizhào - Tôi khá thích nhiếp ảnh, cuối tuần hay đi dạo phố chụp ảnh)",
+            "你有什么好玩的爱好可以推荐给我吗？ (Nǐ yǒu shénme hǎowán de àihào kěyǐ tuījiàn gěi wǒ ma? - Bạn có sở thích nào thú vị gợi ý cho tôi không?)"
+        ]
+    },
+    {
+        "reply_hanzi": "忙碌了一整天，下班或者学习之余，你一般最喜欢做什么来给自己彻底充充电、放松身心？",
+        "reply_pinyin": "Mánglù le yì zhěng tiān, xiàbān huòzhě xuéxí zhīyú, nǐ yìbān zuì xǐhuan zuò shénme lái gěi zìjǐ chèdǐ chōngchōng diàn, fàngsōng shēnxīn?",
+        "translation_vi": "Bận rộn cả ngày dài, sau giờ làm hay giờ học, bạn thường thích làm gì nhất để nạp lại năng lượng và thả lỏng đầu óc?",
+        "feedback": "Chia sẻ về thói quen thư giãn buổi tối giúp câu chuyện thêm gần gũi và ấm áp.",
+        "suggested_replies": [
+            "我喜欢泡一杯热茶，静静地看会儿书 (Wǒ xǐhuan pào yì bēi rèchá, jìngjìng de kànhuǐr shū - Tôi thích pha một tách trà nóng, thong thả đọc chút sách)",
+            "我一般会戴上耳机听听舒缓的歌，或者出门散步 (Wǒ yìbān huì dàishang ěrjī tīngting shūhuǎn de gē, huòzhě chūmén sànbù - Tôi thường đeo tai nghe nghe nhạc nhẹ, hoặc ra ngoài đi dạo)",
+            "洗个热水澡然后美美地睡一觉，第二天就满血复活了 (Xǐ gè rèshuǐzǎo ránhòu měiměi de shuì yí jiào, dì-èr tiān jiù mǎnxuè fùhuó le - Tắm nước nóng rồi ngủ một giấc thật ngon, hôm sau là tràn đầy năng lượng)"
+        ]
+    },
+    {
+        "reply_hanzi": "生活总是需要一些新鲜期待！最近你有没有什么特别想去达成的小目标，或者想去尝试的新事物？",
+        "reply_pinyin": "Shēnghuó zǒng shì xūyào yìxiē xīnxiān qīdài! Zuìjìn nǐ yǒu méiyǒu shénme tèbié xiǎng qù dáchéng de xiǎo mùbiāo, huòzhě xiǎng qù chángshì de xīn shìwù?",
+        "translation_vi": "Cuộc sống lúc nào cũng cần những mong đợi mới mẻ! Dạo này bạn có mục tiêu nhỏ nào muốn đạt được, hay có điều gì mới muốn thử sức không?",
+        "feedback": "Nói về những dự định tương lai thể hiện tinh thần sống tích cực và nhiều năng lượng.",
+        "suggested_replies": [
+            "我最近在坚持每天练习外语口语，希望能脱口而出 (Wǒ zuìjìn zài jiānchí měitiān liànxí wàiyǔ kǒuyǔ, xīwàng néng tuōkǒu ér chū - Dạo này tôi kiên trì luyện nói ngoại ngữ mỗi ngày, mong có thể nói tự nhiên lưu loát)",
+            "我想学习一门新的技能，比如做烘焙或者剪辑视频 (Wǒ xiǎng xuéxí yì mén xīn de jìnéng, bǐrú zuò hōngbèi huòzhě jiǎnjí shìpín - Tôi muốn học thêm kỹ năng mới, như làm bánh hoặc dựng video)",
+            "我正计划一次短途旅行，去看看不一样的风景 (Wǒ zhèng jìhuà yí cì duǎntú lǚxíng, qù kànkan bù yíyàng de fēngjǐng - Tôi đang lên lịch cho một chuyến du lịch ngắn ngày để ngắm phong cảnh mới)"
+        ]
+    },
+    {
+        "reply_hanzi": "有时候一首动听的歌能治愈一整天的心情。你最近有经常单曲循环的歌曲吗？能跟我聊聊它带给你的感觉吗？",
+        "reply_pinyin": "Yǒushíhou yì shǒu dòngtīng de gē néng zhìyù yì zhěng tiān de xīnqíng. Nǐ zuìjìn yǒu chángcháng dānqǔ xúnhuán de gēqǔ ma? Néng gēn wǒ liáoliao tā dài gěi nǐ de gǎnjué ma?",
+        "translation_vi": "Đôi khi một bài hát hay có thể xoa dịu tâm trạng cả ngày. Dạo này bạn có bài hát nào nghe đi nghe lại không? Có thể chia sẻ cảm xúc mà bài hát mang lại cho bạn không?",
+        "feedback": "Âm nhạc là ngôn ngữ không biên giới, rất thích hợp để tâm sự cảm xúc.",
+        "suggested_replies": [
+            "我最近特别喜欢一首旋律温柔的民谣，听着心里很平静 (Wǒ zuìjìn tèbié xǐhuan yì shǒu xuánlǜ wēnróu de mínyáo, tīngzhe xīn lǐ hěn píngjìng - Dạo này tôi rất thích một bài dân ca giai điệu êm dịu, nghe thấy lòng rất bình yên)",
+            "我喜欢节奏明快的流行歌，能让人瞬间充满干劲 (Wǒ xǐhuan jiézòu míngkuài de liúxínggē, néng ràng rén shùnjiān chōngmǎn gànjìn - Tôi thích nhạc pop sôi động, nghe là lập tức có thêm động lực)",
+            "我平时各种风格都听一点，你有什么珍藏的好歌推荐吗？ (Wǒ píngshí gè zhǒng fēnggé dōu tīng yìdiǎn, nǐ yǒu shénme zhēncáng de hǎogē tuījiàn ma? - Tôi nhạc gì cũng nghe một chút, bạn có bài hát tủ nào hay giới thiệu cho tôi không?)"
+        ]
+    },
+    {
+        "reply_hanzi": "如果给你一整天完全自由的时间，不用考虑任何工作和琐事，你最想怎么度过这美好的一天？",
+        "reply_pinyin": "Rúguǒ gěi nǐ yì zhěng tiān wánquán zìyóu de shíjiān, bú yòng kǎolǜ rènhé gōngzuò hé suǒshì, nǐ zuì xiǎng zěnme dùguò zhè měihǎo de yì tiān?",
+        "translation_vi": "Nếu cho bạn trọn vẹn một ngày hoàn toàn tự do, không phải vướng bận công việc hay sự đời, bạn muốn trải qua ngày tuyệt vời đó như thế nào nhất?",
+        "feedback": "Cấu trúc giả định 'Nếu... thì...' (如果...就...) là một mẫu câu rất hay để thực hành phản xạ nói.",
+        "suggested_replies": [
+            "我会在大自然里徒步一整天，呼吸新鲜空气 (Wǒ huì zài dàzìrán lǐ túbù yì zhěng tiān, hūxī xīnxiān kōngqì - Tôi sẽ đi bộ dã ngoại giữa thiên nhiên cả ngày, hít thở không khí trong lành)",
+            "我会找一家安静舒适的咖啡馆，坐着发呆或者看书 (Wǒ huì zhǎo yì jiā ānjìng shūshì de kāfēiguǎn, zuòzhe fādāi huòzhě kànshū - Tôi sẽ tìm một quán cà phê yên tĩnh, ngồi ngắm phố hoặc đọc sách)",
+            "睡到自然醒，吃一顿丰盛的早午餐，然后随心漫步 (Shuì dào zìrán xǐng, chī yí dùn fēngshèng de zǎowǔcān, ránhòu suíxīn mànbù - Ngủ đẫy giấc tự nhiên tỉnh, ăn một bữa brunch thịnh soạn rồi thong thả dạo phố)"
+        ]
+    },
+    {
+        "reply_hanzi": "俗话说‘民以食为天’，美食总能带给人满满的幸福感！你平时最怀念的一道家常滋味是什么？",
+        "reply_pinyin": "Súhuà shuō ‘mín yǐ shí wéi tiān’, měishí zǒng néng dài gěi rén mǎnmǎn de xìngfúgǎn! Nǐ píngshí zuì huáiniàn de yí dào jiācháng zīwèi shì shénme?",
+        "translation_vi": "Tục ngữ có câu 'Dân dĩ thực vi thiên' (Ăn uống là điều hệ trọng nhất), món ăn ngon lúc nào cũng mang lại cảm giác hạnh phúc ngập tràn! Vị cơm nhà mà bạn nhớ nhất là món gì?",
+        "feedback": "Ẩm thực gia đình luôn gợi nhiều cảm xúc thân thương và vốn từ phong phú.",
+        "suggested_replies": [
+            "我最想念妈妈亲手做的拿手菜，永远吃不腻 (Wǒ zuì xiǎngniàn māma qīnshǒu zuò de náshǒucài, yǒngyuǎn chī bú nì - Tôi nhớ nhất món tủ do chính tay mẹ nấu, ăn hoài không bao giờ ngán)",
+            "我最喜欢街头巷尾那些地道的小吃，烟火气十足 (Wǒ zuì xǐhuan jiētóu xiàngwěi nàxiē dìdao de xiǎochī, yānhuǒqì shízú - Tôi thích những món ăn vặt đường phố dân dã, đậm đà phong vị đời sống)",
+            "我周末喜欢自己研究新菜谱，做给家人朋友尝 (Wǒ zhōumò xǐhuan zìjǐ yánjiū xīn càipǔ, zuò gěi jiārén péngyou cháng - Cuối tuần tôi thích tự mày mò công thức món mới nấu cho người thân bạn bè thưởng thức)"
+        ]
+    }
+]
+
+DEFAULT_ENGLISH_TURNS = [
+    {
+        "reply": "That's awesome! Aside from that, what kind of hobbies or activities do you enjoy most in your free time?",
+        "reply_ipa": "/ðæts ˈɔːsəm! əˈsaɪd frʌm ðæt, wʌt kaɪnd əv ˈhɑːbiz ɔːr ækˈtɪvətiz duː juː ɪnˈdʒɔɪ moʊst ɪn jʊər friː taɪm?/",
+        "translation_vi": "Tuyệt quá! Ngoài điều đó ra, bạn thích những sở thích hay hoạt động nào nhất vào thời gian rảnh rỗi?",
+        "feedback": "Keep it up! Your conversational rhythm is getting smoother and more natural with every turn.",
+        "suggested_replies": [
+            "I really enjoy listening to music and taking long evening walks. (/aɪ ˈriːəli ɪnˈdʒɔɪ ˈlɪsnɪŋ tuː ˈmjuːzɪk ænd ˈteɪkɪŋ lɔːŋ ˈiːvnɪŋ wɔːks/ - Tôi rất thích nghe nhạc và đi dạo buổi tối.)",
+            "I love reading inspirational books and learning new skills online. (/aɪ lʌv ˈriːdɪŋ ˌɪnspəˈreɪʃənl bʊks ænd ˈlɜːrnɪŋ nuː skɪlz ˌɑːnˈlaɪn/ - Tôi thích đọc sách truyền cảm hứng và học các kỹ năng mới trên mạng.)",
+            "What about you? What are your favorite pastimes outside of work? (/wʌt əˈbaʊt juː? wʌt ɑːr jʊər ˈfeɪvərɪt ˈpæstaɪmz ˌaʊtˈsaɪd əv wɜːrk? - Còn bạn thì sao? Thú vui tiêu khiển bạn thích nhất ngoài giờ làm việc là gì?)"
+        ]
+    },
+    {
+        "reply": "After a productive or busy day, what is your absolute favorite way to unwind and recharge your energy?",
+        "reply_ipa": "/ˈæftər ə prəˈdʌktɪv ɔːr ˈbɪzi deɪ, wʌt ɪz jʊər ˈæbsəluːt ˈfeɪvərɪt weɪ tuː ʌnˈwaɪnd ænd ˌriːˈtʃɑːrdʒ jʊər ˈenərdʒi?/",
+        "translation_vi": "Sau một ngày làm việc hiệu quả hay bận rộn, cách bạn thích nhất để xả hơi và sạc lại năng lượng là gì?",
+        "feedback": "Talking about evening decompression routines shows authentic, reflective language.",
+        "suggested_replies": [
+            "I love brewing a warm cup of herbal tea and reading quietly. (/aɪ lʌv ˈbruːɪŋ ə wɔːrm kʌp əv ˈɜːrbl tiː ænd ˈriːdɪŋ ˈkwaɪətli/ - Tôi thích pha một tách trà thảo mộc ấm và đọc sách trong yên tĩnh.)",
+            "Putting on my headphones with chill music always recharges me. (/ˈpʊtɪŋ ɑːn maɪ ˈhedfoʊnz wɪð tʃɪl ˈmjuːzɪk ˈɔːlweɪz ˌriːˈtʃɑːrdʒɪz miː/ - Đeo tai nghe nghe nhạc êm dịu lúc nào cũng giúp tôi hồi phục năng lượng.)",
+            "A hot shower followed by a deep restful sleep does wonders for me. (/ə hɑːt ˈʃaʊər ˈfɑːloʊd baɪ ə diːp ˈrestfl sliːp dʌz ˈwʌndərz fər miː/ - Tắm nước nóng rồi ngủ một giấc thật sâu giúp tôi sảng khoái hẳn.)"
+        ]
+    },
+    {
+        "reply": "Life is always more exciting with new goals! Is there any fresh skill or new activity you've been wanting to try lately?",
+        "reply_ipa": "/laɪf ɪz ˈɔːlweɪz mɔːr ɪkˈsaɪtɪŋ wɪð nuː ɡoʊlz! ɪz ðɛr ˈɛni freʃ skɪl ɔːr nuː ækˈtɪvəti juːv biːn ˈwɑːntɪŋ tuː traɪ ˈleɪtli?/",
+        "translation_vi": "Cuộc sống lúc nào cũng hào hứng hơn khi có những mục tiêu mới! Dạo này có kỹ năng mới hay hoạt động nào bạn đang ấp ủ muốn thử không?",
+        "feedback": "Using 'have been wanting to...' is a great way to express ongoing aspirations.",
+        "suggested_replies": [
+            "I'm practicing daily English speaking to boost my natural fluency. (/aɪm ˈpræktɪsɪŋ ˈdeɪli ˈɪŋɡlɪʃ ˈspiːkɪŋ tuː buːst maɪ ˈnætʃrəl ˈfluːənsi/ - Tôi đang luyện nói tiếng Anh mỗi ngày để tăng độ trôi chảy tự nhiên.)",
+            "I really want to pick up video editing and photography this year. (/aɪ ˈriːəli wɑːnt tuː pɪk ʌp ˈvɪdioʊ ˈedɪtɪŋ ænd fəˈtɑːɡrəfi ðɪs jɪr/ - Tôi rất muốn học thêm dựng video và nhiếp ảnh trong năm nay.)",
+            "I'm hoping to plan an exciting road trip to explore new destinations. (/aɪm ˈhoʊpɪŋ tuː plæn ən ɪkˈsaɪtɪŋ roʊd trɪp tuː ɪkˈsplɔːr nuː ˌdestɪˈneɪʃnz/ - Tôi hy vọng sẽ lên kế hoạch cho một chuyến đi phượt để khám phá những điểm đến mới.)"
+        ]
+    },
+    {
+        "reply": "Music has such a magical way of lifting our spirits! Have you had any favorite song playing on repeat lately?",
+        "reply_ipa": "/ˈmjuːzɪk hæz sʌtʃ ə ˈmædʒɪkl weɪ əv ˈlɪftɪŋ ˈaʊər ˈspɪrɪts! hæv juː hæd ˈɛni ˈfeɪvərɪt sɔːŋ ˈpleɪɪŋ ɑːn rɪˈpiːt ˈleɪtli?/",
+        "translation_vi": "Âm nhạc có cách kỳ diệu để nâng cao tinh thần! Dạo này bạn có bài hát yêu thích nào đang bật nghe đi nghe lại không?",
+        "feedback": "Music discussions bring out descriptive adjectives and personal storytelling.",
+        "suggested_replies": [
+            "I've been playing an acoustic indie folk song that feels so calming. (/aɪv biːn ˈpleɪɪŋ ən əˈkuːstɪk ˈɪndi foʊk sɔːŋ ðæt fiːlz soʊ ˈkɑːmɪŋ/ - Tôi đang nghe đi nghe lại một bài indie folk mộc mạc mang lại cảm giác rất thanh bình.)",
+            "I love upbeat pop hits that instantly get me energized for the day. (/aɪ lʌv ˌʌpˈbiːt pɑːp hɪts ðæt ˈɪnstəntli ɡet miː ˈenərdʒaɪzd fər ðə deɪ/ - Tôi thích các bài pop sôi động giúp tôi lập tức tràn đầy năng lượng cho ngày mới.)",
+            "My music taste is pretty eclectic, do you have any good recommendations? (/maɪ ˈmjuːzɪk teɪst ɪz ˈprɪti ɪˈklektɪk, duː juː hæv ˈɛni ɡʊd ˌrekəmenˈdeɪʃnz? - Gu âm nhạc của tôi khá đa dạng, bạn có bài nào hay gợi ý cho tôi không?)"
+        ]
+    },
+    {
+        "reply": "If you had an entire day completely free with zero work or obligations, how would you spend it from morning till night?",
+        "reply_ipa": "/ɪf juː hæd ən ɪnˈtaɪər deɪ kəmˈpliːtli friː wɪð ˈzɪroʊ wɜːrk ɔːr ˌɑːblɪˈɡeɪʃnz, haʊ wʊd juː spend ɪt frʌm ˈmɔːrnɪŋ tɪl naɪt?/",
+        "translation_vi": "Nếu bạn có một ngày trọn vẹn hoàn toàn tự do không công việc hay vướng bận gì, bạn sẽ tận hưởng ngày đó từ sáng tới tối như thế nào?",
+        "feedback": "Hypothetical conditional sentences (If you had... would you...) are essential for expressive fluency.",
+        "suggested_replies": [
+            "I would spend the whole day outdoors hiking in lush nature. (/aɪ wʊd spend ðə hoʊl deɪ ˌaʊtˈdɔːrz ˈhaɪkɪŋ ɪn lʌʃ ˈneɪtʃər/ - Tôi sẽ dành trọn ngày ở ngoài trời đi bộ leo núi giữa thiên nhiên xanh ngát.)",
+            "I'd sit in a cozy aesthetic cafe with a great book and delicious coffee. (/aɪd sɪt ɪn ə ˈkoʊzi esˈθetɪk kæˈfeɪ wɪð ə ɡreɪt bʊk ænd dɪˈlɪʃəs ˈkɔːfi/ - Tôi sẽ ngồi trong một quán cà phê xinh xắn với một cuốn sách hay và ly cà phê thơm ngon.)",
+            "Sleep in with no alarm, enjoy a brunch feast, and wander freely. (/sliːp ɪn wɪð noʊ əˈlɑːrm, ɪnˈdʒɔɪ ə brʌntʃ fiːst, ænd ˈwɑːndər ˈfriːli/ - Ngủ nướng không cần chuông báo thức, thưởng thức bữa brunch thịnh soạn và thong thả dạo phố.)"
+        ]
+    },
+    {
+        "reply": "They say comfort food brings the purest happiness! What's your absolute favorite home-cooked dish that you never get tired of?",
+        "reply_ipa": "/ðeɪ seɪ ˈkʌmfərt fuːd brɪŋz ðə ˈpjʊrɪst ˈhæpinəs! wʌts jʊər ˈæbsəluːt ˈfeɪvərɪt ˈhoʊmkʊkt dɪʃ ðæt juː ˈnevər ɡet ˈtaɪərd əv?/",
+        "translation_vi": "Người ta nói những món ăn ấm cúng đem lại niềm hạnh phúc thuần khiết nhất! Món cơm nhà ruột mà bạn không bao giờ ăn ngán là món gì?",
+        "feedback": "Talking about food comfort memories connects language directly to personal warmth.",
+        "suggested_replies": [
+            "Nothing can ever beat my mom's signature home cooking. (/ˈnʌθɪŋ kæn ˈevər biːt maɪ mɑːmz ˈsɪɡnətʃər hoʊm ˈkʊkɪŋ/ - Không gì có thể sánh được với những món cơm nhà do chính tay mẹ nấu.)",
+            "I love exploring authentic street delicacies with rich cultural flavors. (/aɪ lʌv ɪkˈsplɔːrɪŋ ɔːˈθentɪk striːt ˈdelɪkəsiz wɪð rɪtʃ ˈkʌltʃərəl ˈfleɪvərz/ - Tôi mê khám phá những món ẩm thực đường phố dân dã đậm đà bản sắc.)",
+            "I really enjoy experimenting with new home recipes on weekends. (/aɪ ˈriːəli ɪnˈdʒɔɪ ɪkˌsperɪˈmentɪŋ wɪð nuː hoʊm ˈresəpiz ɑːn ˈwiːkendz/ - Tôi rất thích tự tay mày mò các công thức nấu ăn mới vào dịp cuối tuần.)"
+        ]
+    }
+]
+
+def get_dynamic_offline_response(user_text: str, lang: str, scenario_id: str, turn_count: int = 1, history: list = None, error_note: str = None):
     text_lower = user_text.lower().strip()
     scenario_lower = (scenario_id or "").lower().strip()
     search_context = f"{text_lower} {scenario_lower}"
 
     if lang == "zh":
-        return _resolve_chinese_dynamic(search_context, scenario_id, turn_count)
+        return _resolve_chinese_dynamic(search_context, scenario_id, turn_count, history)
     else:
-        return _resolve_english_dynamic(search_context, scenario_id, turn_count)
+        return _resolve_english_dynamic(search_context, scenario_id, turn_count, history)
 
-def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
+def _resolve_chinese_dynamic(text: str, scenario: str, turn: int, history: list = None):
+    # Lấy tập hợp các câu phản hồi trước đó của trợ lý để chống lặp tuyệt đối
+    past_replies = set()
+    for item in (history or []):
+        if item.get("role") in ["assistant", "model"]:
+            c = item.get("content", "").strip()
+            if c:
+                past_replies.add(c)
+
+    def is_new(item):
+        return item and item.get("reply_hanzi") not in past_replies
+
     # 1. Cà phê & Quán xá
-    if any(k in text for k in ["咖啡", "kāfēi", "cafe", "coffee", "cà phê", "quán xá"]):
-        return {
+    if any(k in text for k in ["咖啡", "kāfēi", "cafe", "coffee", "拿铁", "美式", "手冲", "奶茶", "cà phê", "quán xá", "uống trà"]):
+        cand = {
             "reply_hanzi": "聊到喝咖啡，我每天早上都得来一杯提提神！你平时更喜欢美式、拿铁还是手冲？有常去的咖啡馆吗？",
             "reply_pinyin": "Liáo dào hē kāfēi, wǒ měitiān zǎoshang dōu děi lái yì bēi títi shén! Nǐ píngshí gèng xǐhuan měishì, nátiě háishì shǒuchōng? Yǒu cháng qù de kāfēiguǎn ma?",
             "translation_vi": "Nhắc đến cà phê, sáng nào tôi cũng phải làm một ly cho tỉnh táo! Bạn hay uống Americano, Latte hay Pour-over? Có quán ruột nào hay ghé không?",
@@ -314,10 +514,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "我平时不太喝咖啡，更喜欢喝奶茶或水果茶 (Wǒ píngshí bú tài hē kāfēi, gèng xǐhuan hē nǎichá huò shuǐguǒchá - Bình thường tôi ít uống cà phê, thích trà sữa hoặc trà hoa quả hơn)"
             ]
         }
+        if is_new(cand): return cand
 
     # 2. Ẩm thực & Món ngon
-    elif any(k in text for k in ["美食", "菜", "饭", "火锅", "food", "cooking", "ẩm thực", "món ngon", "ăn"]):
-        return {
+    elif any(k in text for k in ["美食", "菜", "饭", "火锅", "好吃", "美味", "food", "cooking", "ẩm thực", "món ngon", "ăn", "nấu"]):
+        cand = {
             "reply_hanzi": "聊到好吃的我可就不困了！你最喜欢哪一种菜系？有没有什么百吃不厌的招牌家常菜？",
             "reply_pinyin": "Liáo dào hǎochī de wǒ kě jiù bú kùn le! Nǐ zuì xǐhuan nǎ yì zhǒng càixì? Yǒu méiyǒu shénme bǎi chī bú yàn de zhāopai jiāchángcài?",
             "translation_vi": "Nói đến đồ ăn ngon là tôi tỉnh cả ngủ! Bạn thích ẩm thực phong cách nào nhất? Có món cơm nhà nào ăn hoài không chán không?",
@@ -328,12 +529,13 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "我平时喜欢自己在家做饭，既健康又省钱 (Wǒ píngshí xǐhuan zìjǐ zài jiā zuòfàn, jì jiànkāng yòu shěngqián - Tôi hay tự nấu ăn ở nhà, vừa sạch lại tiết kiệm)"
             ]
         }
+        if is_new(cand): return cand
 
     # 3. Du lịch & Khám phá
-    elif any(k in text for k in ["旅游", "度假", "旅行", "travel", "trip", "du lịch", "khám phá"]):
-        return {
+    elif any(k in text for k in ["旅游", "度假", "旅行", "去过", "travel", "trip", "du lịch", "khám phá", "phượt"]):
+        cand = {
             "reply_hanzi": "旅行总能让人心情变好！你至今去过最难忘的地方是哪里？接下来最想去哪儿玩？",
-            "reply_pinyin": "Lǚxíng zǒng néng ràng rén xīanqíng biàn hǎo! Nǐ zhìjīn qù guo zuì nánwàng de dìfang shì nǎlǐ? Jiēxiàlai zuì xiǎng qù nǎr wán?",
+            "reply_pinyin": "Lǚxíng zǒng néng ràng rén xīnqíng biàn hǎo! Nǐ zhìjīn qù guo zuì nánwàng de dìfang shì nǎlǐ? Jiēxiàlai zuì xiǎng qù nǎr wán?",
             "translation_vi": "Đi du lịch lúc nào cũng làm tâm trạng phấn chấn! Nơi đáng nhớ nhất bạn từng đi là đâu? Sắp tới muốn đi đâu nhất?",
             "feedback": "Hãy chia sẻ về cảnh đẹp hoặc kỷ niệm một chuyến đi của bạn.",
             "suggested_replies": [
@@ -342,10 +544,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "我打算今年休年假的时候出国走走 (Wǒ dǎsuàn jīnnián xiū niánjià de shíhou chūguó zǒuzou - Tôi tính dịp nghỉ phép năm nay sẽ đi du lịch nước ngoài một chuyến)"
             ]
         }
+        if is_new(cand): return cand
 
     # 4. Công việc & Sự nghiệp
-    elif any(k in text for k in ["职场", "工作", "上班", "work", "career", "công việc", "sự nghiệp"]):
-        return {
+    elif any(k in text for k in ["职场", "工作", "上班", "公司", "work", "career", "công việc", "sự nghiệp"]):
+        cand = {
             "reply_hanzi": "工作忙碌之余也别忘了放松身心。你平时的工作节奏快吗？工作中最有成就感的事情是什么？",
             "reply_pinyin": "Gōngzuò mánglù zhī yú yě bié wàng le fàngsōng shēnxīn. Nǐ píngshí de gōngzuò jiézòu kuài ma? Gōngzuò zhōng zuì yǒu chéngjiùgǎn de shìqing shì shénme?",
             "translation_vi": "Bận rộn làm việc nhưng cũng đừng quên thư giãn nhé. Nhịp độ công việc của bạn có dồn dập không? Điều gì trong công việc làm bạn thấy có thành tựu nhất?",
@@ -356,10 +559,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "我目前正在努力平衡工作与个人生活 (Wǒ mùqián zhèngzài nǔlì pínghéng gōngzuò yǔ gèrén shēnghuó - Hiện tôi đang cố gắng cân bằng giữa công việc và đời sống riêng)"
             ]
         }
+        if is_new(cand): return cand
 
     # 5. Phim ảnh & Giải trí
-    elif any(k in text for k in ["电影", "追剧", "movie", "cinema", "netflix", "phim", "giải trí"]):
-        return {
+    elif any(k in text for k in ["电影", "追剧", "电视剧", "movie", "cinema", "netflix", "phim", "giải trí"]):
+        cand = {
             "reply_hanzi": "看电影追剧真是最棒的消遣了！你最近在追什么好看的电视剧或电影吗？",
             "reply_pinyin": "Kàn diànyǐng zhuījù zhēn shì zuì bàng de xiāoqiǎn le! Nǐ zuìjìn zài zhuī shénme hǎokàn de diànshìjù huò diànyǐng ma?",
             "translation_vi": "Xem phim đúng là cách giải trí tuyệt vời nhất! Dạo này bạn có đang cày bộ phim hay bộ truyền hình nào không?",
@@ -370,10 +574,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "周末我打算约朋友一起去电影院看新上映的大片 (Zhōumò wǒ dǎsuàn yuē péngyou yìqǐ qù diànyǐngyuàn kàn xīn shàngyìng de dàpiàn - Cuối tuần tôi tính hẹn bạn ra rạp xem phim bom tấn mới chiếu)"
             ]
         }
+        if is_new(cand): return cand
 
     # 6. Thời tiết & Đời sống
-    elif any(k in text for k in ["天气", "四季", "weather", "thời tiết", "mưa", "nắng"]):
-        return {
+    elif any(k in text for k in ["天气", "四季", "weather", "thời tiết", "mưa", "nắng", "下雨", "晴天", "冬天", "夏天", "秋天", "春天"]):
+        cand = {
             "reply_hanzi": "你那边的天气今天怎么样？是晴天还是下雨？你最喜欢哪一个季节？",
             "reply_pinyin": "Nǐ nàbiān de tiānqì jīntiān zěnmeyàng? Shì qíngtiān háishì xiàyǔ? Nǐ zuì xǐhuan nǎ yí gè jìjié?",
             "translation_vi": "Thời tiết bên bạn hôm nay thế nào? Trời nắng hay mưa? Bạn thích mùa nào nhất trong năm?",
@@ -384,10 +589,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "这几天一直在下雨，出门有点不太方便 (Zhè jǐ tiān yìzhí zài xiàyǔ, chūmén yǒudiǎn bú tài fāngbiàn - Mấy hôm nay mưa suốt, ra đường hơi bất tiện một chút)"
             ]
         }
+        if is_new(cand): return cand
 
     # 7. Cuối tuần & Thư giãn
     elif any(k in text for k in ["周末", "weekend", "cuối tuần", "xả stress", "kế hoạch"]):
-        return {
+        cand = {
             "reply_hanzi": "又快到周末啦！这个周末你有什么特别的计划吗？打算在家宅着还是出去逛逛？",
             "reply_pinyin": "Yòu kuài dào zhōumò la! Zhège zhōumò nǐ yǒu shénme tèbié de jìhuà ma? Dǎsuàn zài jiā zháizhe háishì chūqù guàngguang?",
             "translation_vi": "Lại sắp đến cuối tuần rồi! Cuối tuần này bạn có kế hoạch đặc biệt gì không? Định ở nhà nghỉ ngơi hay ra ngoài dạo chơi?",
@@ -398,10 +604,11 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "目前还没什么安排，到时候随心而行吧 (Mùqián hái méi shénme ānpái, dào shíhou suíxīn ér xíng ba - Giờ chưa có lịch gì cụ thể, tới lúc đó thích gì làm nấy)"
             ]
         }
+        if is_new(cand): return cand
 
     # 8. Mua sắm & Thời trang (Taobao / Shopping)
     elif any(k in text for k in ["买", "逛街", "衣服", "淘宝", "shopping", "mua sắm", "thời trang", "giá"]):
-        return {
+        cand = {
             "reply_hanzi": "逛街买到心仪的东西最开心了！你平时喜欢网上网购还是去商场实体店挑？最近有没有淘到什么好物？",
             "reply_pinyin": "Guàngjiē mǎi dào xīnyí de dōngxi zuì kāixīn le! Nǐ píngshí xǐhuan wǎngshàng wǎnggòu háishì qù shāngchǎng shítǐdiàn tiāo? Zuìjìn yǒu méiyǒu táo dào shénme hǎowù?",
             "translation_vi": "Đi mua sắm sắm được món đồ ưng ý là vui nhất! Bạn thích mua sắm online trên mạng hay ra trung tâm thương mại chọn trực tiếp? Gần đây có săn được món đồ xịn nào không?",
@@ -412,24 +619,87 @@ def _resolve_chinese_dynamic(text: str, scenario: str, turn: int):
                 "最近刚买了一件特别舒服的外套，性价比很高 (Zuìjìn gāng mǎi le yí jiàn tèbié shūfu de wàitào, xìngjiàbǐ hěn gāo - Gần đây tôi vừa mua một chiếc áo khoác rất thoải mái, giá cả cực kỳ hời)"
             ]
         }
+        if is_new(cand): return cand
 
-    # Mặc định: Trò chuyện tự do đời sống
-    return {
-        "reply_hanzi": "哈哈，聊得太开心了！除了这个，你平时有什么特别感兴趣的爱好吗？",
-        "reply_pinyin": "Hāhā, liáo de tài kāixīn le! Chúle zhège, nǐ píngshí yǒu shénme tèbié gǎnxìngqù de àihào ma?",
-        "translation_vi": "Haha, trò chuyện cùng bạn vui quá! Ngoài điều này ra, bình thường bạn có sở thích nào đặc biệt đam mê không?",
-        "feedback": "Bạn đang giao tiếp rất tự nhiên và trôi chảy!",
-        "suggested_replies": [
-            "我平时很喜欢听音乐和跑步，能让人心情舒畅 (Wǒ píngshí hěn xǐhuan tīng yīnyuè hé pǎobù, néng ràng rén xīanqíng shūchàng - Bình thường tôi rất thích nghe nhạc và chạy bộ, giúp tâm trạng thư thái)",
-            "我挺喜欢摄影的，周末常去扫街拍照 (Wǒ tǐng xǐhuan shèyǐng de, zhōumò cháng qù sǎojiē pāizhào - Tôi khá thích nhiếp ảnh, cuối tuần hay đi dạo phố chụp ảnh)",
-            "你有什么好玩的爱好可以推荐给我吗？ (Nǐ yǒu shénme hǎowán de àihào kěyǐ tuījiàn gěi wǒ ma? - Bạn có sở thích nào thú vị gợi ý cho tôi không?)"
-        ]
-    }
+    # 9. MỚI: Sở thích, Thể thao, Âm nhạc & Đọc sách (Gỡ triệt để vòng lặp sở thích)
+    elif any(k in text for k in ["爱好", "音乐", "歌", "跑", "运动", "健身", "球", "摄影", "拍照", "书", "游戏", "sở thích", "đam mê", "âm nhạc", "chạy bộ", "thể thao", "đọc sách", "game", "chụp ảnh", "bơi"]):
+        cand = {
+            "reply_hanzi": "哇，听到你的爱好真让人觉得生活很有热情！坚持这些健康的兴趣能让人彻底放松。你平时一般是一个人享受这个爱好，还是喜欢和志同道合的朋友一起玩？",
+            "reply_pinyin": "Wa, tīngdào nǐ de àihào zhēn ràng rén juéde shēnghuó hěn yǒu rèqíng! Jiānchí zhèxiē jiànkāng de xìngqù néng ràng rén chèdǐ fàngsōng. Nǐ píngshí yìbān shì yì gè rén xiǎngshòu zhège àihào, háishì xǐhuan hé zhìtóngdàohé de péngyou yìqǐ wán?",
+            "translation_vi": "Oa, nghe về sở thích của bạn thật sự thấy cuộc sống tràn đầy nhiệt huyết! Duy trì những thú vui lành mạnh này giúp xua tan mệt mỏi rất tốt. Bạn thường thích tận hưởng sở thích này một mình hay thích tham gia cùng bạn bè chung chí hướng?",
+            "feedback": "Từ vựng về sở thích và thói quen rất phổ biến trong giao tiếp hàng ngày.",
+            "suggested_replies": [
+                "我更喜欢一个人静静地享受，这样最解压 (Wǒ gèng xǐhuan yí gè rén jìngjìng de xiǎngshòu, zhèyàng zuì jiěyā - Tôi thích một mình tận hưởng trong yên tĩnh hơn, như vậy xả stress nhất)",
+                "我经常和志趣相投的朋友一起切磋交流 (Wǒ chángcháng hé zhìqù xiāngtóu de péngyou yìqǐ qiēcuō jiāoliú - Tôi hay giao lưu trao đổi cùng những người bạn có chung sở thích)",
+                "有时候一个人，有时候和朋友，看当时的心情 (Yǒushíhou yí gè rén, yǒushíhou hé péngyou, kàn dāngshí de xīnqíng - Có lúc một mình, có lúc cùng bạn bè, tùy vào tâm trạng lúc đó)"
+            ]
+        }
+        if is_new(cand): return cand
 
-def _resolve_english_dynamic(text: str, scenario: str, turn: int):
+    # 10. MỚI: Học ngoại ngữ & Trau dồi bản thân
+    elif any(k in text for k in ["学", "汉语", "中文", "英语", "tiếng trung", "tiếng anh", "ngoại ngữ", "phát âm", "từ vựng", "ngữ pháp"]):
+        cand = {
+            "reply_hanzi": "学习一门外语就像打开了一扇看世界的新窗户！你在练习中文的过程中，觉得最有趣或者最有成就感的是哪一部分？",
+            "reply_pinyin": "Xuéxí yì mén wàiyǔ jiù xiàng dǎkāi le yí shàn kàn shìjiè de xīn chuānghu! Nǐ zài liànxí Zhōngwén de guòchéng zhōng, juéde zuì yǒuyìsi huòzhě zuì yǒu chéngjiùgǎn de shì nǎ yí bùfen?",
+            "translation_vi": "Học một ngoại ngữ mới giống như mở ra một cánh cửa sổ nhìn ra thế giới! Trong quá trình luyện tiếng Trung, bạn thấy phần nào thú vị hoặc đem lại cảm giác thành tựu nhất?",
+            "feedback": "Nói về trải nghiệm học tập giúp bạn rèn luyện phản xạ trình bày quan điểm cá nhân.",
+            "suggested_replies": [
+                "我觉得能听懂原汁原味的影视剧和歌曲最有成就感 (Wǒ juéde néng tīngdǒng yuánzhīyuánwèi de yǐngshìjù hé gēqǔ zuì yǒu chéngjiùgǎn - Tôi thấy nghe hiểu được phim ảnh và bài hát nguyên bản là đã nhất)",
+                "汉字的字形和声调虽然难，但非常有美感和内涵 (Hànzì de zìxíng hé shēngdiào suīrán nán, dàn fēicháng yǒu měigǎn hé nèihán - Chữ Hán và thanh điệu tuy khó nhưng rất giàu tính thẩm mỹ và chiều sâu)",
+                "我喜欢能自信开口表达，和朋友无障碍沟通 (Wǒ xǐhuan néng zìxìn kāikǒu biǎodá, hé péngyou wú zhàng'ài gōutōng - Tôi thích cảm giác tự tin mở lời biểu đạt, giao tiếp thông suốt cùng bạn bè)"
+            ]
+        }
+        if is_new(cand): return cand
+
+    # 11. MỚI: Chào hỏi, Lịch sự & Bắt chuyện tự nhiên
+    elif any(k in text for k in ["你好", "您好", "xin chào", "chào", "早安", "晚安", "好的", "哈哈", "嗨"]):
+        cand = {
+            "reply_hanzi": "嗨！很高兴能和你畅聊。今天过得怎么样？是刚下班还是正在休息？跟我分享一下你此刻的心情吧！",
+            "reply_pinyin": "Hāi! Hěn gāoxìng néng hé nǐ chàngliáo. Jīntiān guò de zěnmeyàng? Shì gāng xiàbān háishì zhèngzài xiūxi? Gēn wǒ fēnxiǎng yíxià nǐ cǐkè de xīnqíng ba!",
+            "translation_vi": "Chào bạn! Rất vui được trò chuyện thoải mái cùng bạn. Ngày hôm nay của bạn thế nào rồi? Vừa tan làm hay đang nghỉ ngơi? Chia sẻ với mình tâm trạng lúc này của bạn nhé!",
+            "feedback": "Lời chào tự nhiên giúp bắt nhịp câu chuyện cực kỳ mượt mà.",
+            "suggested_replies": [
+                "我今天过得挺充实的，刚忙完手头的事情 (Wǒ jīntiān guò de tǐng chōngshí de, gāng máng wán shǒutóu de shìqing - Hôm nay tôi trải qua khá trọn vẹn, vừa làm xong việc trong tay)",
+                "今天有点小累，正想找人轻松聊聊天解解压 (Jīntiān yǒudiǎn xiǎo lèi, zhèng xiǎng zhǎo rén qīngsōng liáoliáo tiān jiějiě yā - Hôm nay hơi mệt chút, đang muốn tìm người tán gẫu nhẹ nhàng để xả hơi)",
+                "我心情很不错，正准备吃点好吃的犒劳自己 (Wǒ xīnqíng hěn búcuò, zhèng zhǔnbèi chī diǎn hǎochī de kàolao zìjǐ - Tâm trạng tôi rất tốt, đang chuẩn bị ăn món ngon để tự thưởng cho mình)"
+            ]
+        }
+        if is_new(cand): return cand
+
+    # Mặc định: Hệ thống xoay vòng chủ đề thông minh CHỐNG LẶP TUYỆT ĐỐI
+    available_turns = [turn_item for turn_item in DEFAULT_CHINESE_TURNS if turn_item["reply_hanzi"] not in past_replies]
+    if not available_turns:
+        available_turns = DEFAULT_CHINESE_TURNS
+
+    chosen_index = (max(turn, 1) - 1) % len(available_turns)
+    return available_turns[chosen_index]
+
+def _resolve_english_dynamic(text: str, scenario: str, turn: int, history: list = None):
+    # Lấy tập hợp các câu phản hồi trước đó của trợ lý để chống lặp tuyệt đối
+    past_replies = set()
+    for item in (history or []):
+        if item.get("role") in ["assistant", "model"]:
+            c = item.get("content", "").strip()
+            if c:
+                past_replies.add(c)
+
+    def is_new(item):
+        return item and item.get("reply") not in past_replies
+
+    import re
+    words = set(re.findall(r'[a-zA-Z0-9_]+', text.lower()))
+
+    def has_any(*kw_list):
+        for k in kw_list:
+            if " " in k:
+                if k in text: return True
+            else:
+                if k in words or k in text: return True
+        return False
+
     # 1. Coffee & Cafes
-    if any(k in text for k in ["coffee", "cafe", "latte", "espresso", "cà phê", "quán xá", "drink"]):
-        return {
+    if has_any("coffee", "cafe", "latte", "espresso", "cà phê", "quán xá", "brew", "cappuccino"):
+        cand = {
             "reply": "I'm always down for good coffee! Do you prefer iced drinks or hot brew, and what's your absolute favorite spot?",
             "reply_ipa": "/aɪm ˈɔːlweɪz daʊn fər ɡʊd ˈkɔːfi! duː juː prɪˈfɜːr aɪst drɪŋks ɔːr hɑːt bruː, ænd wʌts jʊər ˈæbsəluːt ˈfeɪvərɪt spɑːt?/",
             "translation_vi": "Tôi luôn sẵn sàng cho một tách cà phê ngon! Bạn thích đồ uống đá hay đồ nóng, và quán ruột của bạn là ở đâu?",
@@ -440,10 +710,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I'm actually more of a tea person, especially matcha! (/aɪm ˈæktʃuəli mɔːr əv ə tiː ˈpɜːrsən, əˈspeʃəli ˈmætʃə/ - Thực ra tôi là người thích uống trà hơn, đặc biệt là matcha!)"
             ]
         }
+        if is_new(cand): return cand
 
     # 2. Food & Cooking
-    elif any(k in text for k in ["food", "dish", "cook", "restaurant", "ẩm thực", "món ngon", "nấu", "ăn"]):
-        return {
+    elif has_any("food", "dish", "cook", "restaurant", "ẩm thực", "món ngon", "nấu", "ăn", "dinner", "lunch", "breakfast", "meal", "delicious"):
+        cand = {
             "reply": "Talking about delicious food always makes me hungry! What is your all-time favorite comfort dish to eat?",
             "reply_ipa": "/ˈtɔːkɪŋ əˈbaʊt dɪˈlɪʃəs fuːd ˈɔːlweɪz meɪks miː ˈhʌŋɡri! wʌt ɪz jʊər ˈɔːltaɪm ˈfeɪvərɪt ˈkʌmfərt dɪʃ tuː iːt?/",
             "translation_vi": "Nói về đồ ăn ngon lúc nào cũng làm tôi thấy thèm! Món ăn khoái khẩu nhất mang lại cảm giác dễ chịu cho bạn là gì?",
@@ -454,10 +725,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I really enjoy cooking simple homemade meals every evening. (/aɪ ˈriːəli ɪnˈdʒɔɪ ˈkʊkɪŋ ˈsɪmpəl ˈhoʊmmeɪd miːlz ˈevri ˈiːvnɪŋ/ - Tôi rất thích tự nấu những bữa cơm nhà giản dị mỗi tối.)"
             ]
         }
+        if is_new(cand): return cand
 
     # 3. Travel & Vacations
-    elif any(k in text for k in ["travel", "trip", "vacation", "flight", "du lịch", "khám phá"]):
-        return {
+    elif has_any("travel", "trip", "vacation", "flight", "du lịch", "khám phá", "destination", "beach", "hotel"):
+        cand = {
             "reply": "Traveling is such an incredible way to experience the world! What was the most unforgettable trip you've ever taken?",
             "reply_ipa": "/ˈtrævəlɪŋ ɪz sʌtʃ ən ɪnˈkredəbəl weɪ tuː ɪkˈspɪriəns ðə wɜːrld! wʌt wʌz ðə moʊst ˌʌnfərˈɡetəbəl trɪp juːv ˈevər ˈteɪkən?/",
             "translation_vi": "Đi du lịch là cách tuyệt vời nhất để trải nghiệm thế giới! Chuyến đi đáng nhớ nhất bạn từng trải qua là gì?",
@@ -468,10 +740,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I'm planning an exciting road trip with friends this summer. (/aɪm ˈplænɪŋ ən ɪkˈsaɪtɪŋ roʊd trɪp wɪð frendz ðɪs ˈsʌmər/ - Tôi đang lên kế hoạch cho một chuyến phượt cùng bạn bè vào mùa hè này.)"
             ]
         }
+        if is_new(cand): return cand
 
     # 4. Work & Career
-    elif any(k in text for k in ["work", "job", "career", "office", "công việc", "sự nghiệp", "đi làm"]):
-        return {
+    elif has_any("work", "job", "career", "office", "công việc", "sự nghiệp", "đi làm", "company", "boss", "deadline"):
+        cand = {
             "reply": "Balancing work and personal life is always a journey! How has your workday been treating you lately?",
             "reply_ipa": "/ˈbælənsɪŋ wɜːrk ænd ˈpɜːrsənl laɪf ɪz ˈɔːlweɪz ə ˈdʒɜːrni! haʊ hæz jʊər ˈwɜːrkdeɪ biːn ˈtriːtɪŋ juː ˈleɪtli?/",
             "translation_vi": "Cân bằng công việc và cuộc sống luôn là một hành trình! Công việc dạo này của bạn diễn ra thế nào?",
@@ -482,10 +755,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I'm learning a lot of new skills at my current job. (/aɪm ˈlɜːrnɪŋ ə lɑːt əv nuː skɪlz æt maɪ ˈkɜːrənt dʒɑːb/ - Tôi đang học hỏi được rất nhiều kỹ năng mới ở công việc hiện tại.)"
             ]
         }
+        if is_new(cand): return cand
 
     # 5. Movies & Entertainment
-    elif any(k in text for k in ["movie", "film", "cinema", "netflix", "phim", "giải trí"]):
-        return {
+    elif has_any("movie", "movies", "film", "films", "cinema", "netflix", "phim", "giải trí", "series", "actor"):
+        cand = {
             "reply": "Watching movies is such a fantastic way to unwind! Have you seen any great films or series recently?",
             "reply_ipa": "/ˈwɑːtʃɪŋ ˈmuːviz ɪz sʌtʃ ə fænˈtæstɪk weɪ tuː ʌnˈwaɪnd! hæv juː siːn ˈɛni ɡreɪt fɪlmz ɔːr ˈsɪriːz ˈriːsntli?/",
             "translation_vi": "Xem phim đúng là cách xả stress tuyệt vời nhất! Gần đây bạn có xem bộ phim hay series nào tâm đắc không?",
@@ -496,10 +770,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I prefer psychological thrillers that keep me guessing until the end. (/aɪ prɪˈfɜːr ˌsaɪkəˈlɑːdʒɪkl ˈθrɪlərz ðæt kiːp miː ˈɡesɪŋ ʌnˈtɪl ðiː end/ - Tôi thích phim giật gân tâm lý khiến người xem phải đoán đến phút cuối.)"
             ]
         }
+        if is_new(cand): return cand
 
     # 6. Weather & Life vibes
-    elif any(k in text for k in ["weather", "rain", "sunny", "season", "thời tiết", "mưa", "nắng"]):
-        return {
+    elif has_any("weather", "rain", "rainy", "raining", "sunny", "season", "thời tiết", "mưa", "nắng", "cold", "warm", "hot"):
+        cand = {
             "reply": "How's the weather over there today? Do you prefer sunny clear skies or cool rainy days?",
             "reply_ipa": "/haʊz ðə ˈweðər ˈoʊvər ðɛr təˈdeɪ? duː juː prɪˈfɜːr ˈsʌni klɪr skaɪz ɔːr kuːl ˈreɪni deɪz?/",
             "translation_vi": "Thời tiết bên bạn hôm nay thế nào? Bạn thích trời nắng quang đãng hay những ngày mưa mát mẻ hơn?",
@@ -510,10 +785,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "It's raining pretty heavily here, perfect for staying indoors. (/ɪts ˈreɪnɪŋ ˈprɪti ˈhevɪli hɪr, ˈpɜːrfɪkt fər ˈsteɪɪŋ ˌɪnˈdɔːrz/ - Chỗ tôi đang mưa khá to, rất hợp để ngồi trong nhà.)"
             ]
         }
+        if is_new(cand): return cand
 
     # 7. Weekend & Relaxation
-    elif any(k in text for k in ["weekend", "plans", "relax", "cuối tuần", "xả stress", "kế hoạch"]):
-        return {
+    elif has_any("weekend", "plans", "relax", "relaxing", "cuối tuần", "xả stress", "kế hoạch", "saturday", "sunday"):
+        cand = {
             "reply": "The weekend is always something to look forward to! Do you have any fun plans coming up?",
             "reply_ipa": "/ðə ˈwiːkend ɪz ˈɔːlweɪz ˈsʌmθɪŋ tuː lʊk ˈfɔːrwərd tuː! duː juː hæv ˈɛni fʌn plænz ˈkʌmɪŋ ʌp?/",
             "translation_vi": "Cuối tuần lúc nào cũng là điều đáng mong đợi! Bạn có kế hoạch vui chơi gì sắp tới chưa?",
@@ -524,10 +800,11 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "No set plans yet, just taking things as they come! (/noʊ set plænz jet, dʒʌst ˈteɪkɪŋ θɪŋz æz ðeɪ kʌm/ - Chưa có lịch gì cố định, cứ để mọi thứ tự nhiên thôi!)"
             ]
         }
+        if is_new(cand): return cand
 
     # 8. Shopping & Fashion
-    elif any(k in text for k in ["shopping", "clothes", "store", "buy", "mua sắm", "thời trang", "đồ"]):
-        return {
+    elif has_any("shopping", "clothes", "store", "buy", "bought", "mua sắm", "thời trang", "đồ", "jacket", "shoes"):
+        cand = {
             "reply": "Retail therapy is always fun! Do you prefer browsing in physical stores or shopping online for convenience?",
             "reply_ipa": "/ˈriːteɪl ˈθerəpi ɪz ˈɔːlweɪz fʌn! duː juː prɪˈfɜːr ˈbraʊzɪŋ ɪn ˈfɪzɪkl stɔːrz ɔːr ˈʃɑːpɪŋ ˌɑːnˈlaɪn fər kənˈviːniəns?/",
             "translation_vi": "Đi mua sắm xả stress lúc nào cũng vui! Bạn thích đi dạo ở cửa hàng trực tiếp hay mua hàng online cho tiện?",
@@ -538,25 +815,66 @@ def _resolve_english_dynamic(text: str, scenario: str, turn: int):
                 "I recently bought a really stylish jacket that I wear almost every day. (/aɪ ˈriːsntli bɔːt ə ˈriːəli ˈstaɪlɪʃ ˈdʒækɪt ðæt aɪ wer ˈɔːlmoʊst ˈevri deɪ/ - Gần đây tôi vừa mua được chiếc áo khoác rất phong cách mà hầu như ngày nào cũng mặc.)"
             ]
         }
+        if is_new(cand): return cand
 
-    # Default: Casual Daily Talk
-    return {
-        "reply": "That's awesome! Aside from that, what kind of hobbies or activities do you enjoy most in your free time?",
-        "reply_ipa": "/ðæts ˈɔːsəm! əˈsaɪd frʌm ðæt, wʌt kaɪnd əv ˈhɑːbiz ɔːr ækˈtɪvətiz duː juː ɪnˈdʒɔɪ moʊst ɪn jʊər friː taɪm?/",
-        "translation_vi": "Tuyệt quá! Ngoài điều đó ra, bạn thích những sở thích hay hoạt động nào nhất vào thời gian rảnh rỗi?",
-        "feedback": "Keep it up! Your conversational rhythm is getting smoother and more natural with every turn.",
-        "suggested_replies": [
-            "I really enjoy listening to music and taking long evening walks. (/aɪ ˈriːəli ɪnˈdʒɔɪ ˈlɪsnɪŋ tuː ˈmjuːzɪk ænd ˈteɪkɪŋ lɔːŋ ˈiːvnɪŋ wɔːks/ - Tôi rất thích nghe nhạc và đi dạo buổi tối.)",
-            "I love reading inspirational books and learning new skills online. (/aɪ lʌv ˈriːdɪŋ ˌɪnspəˈreɪʃənl bʊks ænd ˈlɜːrnɪŋ nuː skɪlz ˌɑːnˈlaɪn/ - Tôi thích đọc sách truyền cảm hứng và học các kỹ năng mới trên mạng.)",
-            "What about you? What are your favorite pastimes outside of work? (/wʌt əˈbaʊt juː? wʌt ɑːr jʊər ˈfeɪvərɪt ˈpæstaɪmz ˌaʊtˈsaɪd əv wɜːrk? - Còn bạn thì sao? Thú vui tiêu khiển bạn thích nhất ngoài giờ làm việc là gì?)"
-        ]
-    }
+    # 9. MỚI: Hobbies, Sports, Music, Reading & Fitness (Giải quyết triệt để lặp câu hỏi sở thích)
+    elif has_any("hobby", "hobbies", "music", "song", "songs", "run", "running", "sport", "sports", "gym", "workout", "fitness", "photo", "photography", "book", "books", "read", "reading", "game", "gaming", "sở thích", "âm nhạc", "chạy bộ", "thể thao", "đọc sách"):
+        cand = {
+            "reply": "It's wonderful to have passionate hobbies! Pursuing what you love is the best way to decompress. Do you usually enjoy this solo or with a group of friends?",
+            "reply_ipa": "/ɪts ˈwʌndərfl tuː hæv ˈpæʃənət ˈhɑːbiz! pərˈsuːɪŋ wʌt juː lʌv ɪz ðə best weɪ tuː ˌdiːkəmˈpres. duː juː ˈjuːʒuəli ɪnˈdʒɔɪ ðɪs ˈsoʊloʊ ɔːr wɪð ə ɡruːp əv frendz?/",
+            "translation_vi": "Thật tuyệt khi có những đam mê riêng! Theo đuổi điều mình yêu thích là cách tốt nhất để xả hơi. Bạn thường tận hưởng sở thích này một mình hay cùng một nhóm bạn?",
+            "feedback": "Sharing about personal hobbies makes English conversations feel lively and authentic.",
+            "suggested_replies": [
+                "I definitely prefer enjoying it solo to fully clear my mind. (/aɪ ˈdefɪnətli prɪˈfɜːr ɪnˈdʒɔɪɪŋ ɪt ˈsoʊloʊ tuː ˈfʊli klɪr maɪ maɪnd/ - Tôi chắc chắn thích tận hưởng một mình để đầu óc hoàn toàn thư thái.)",
+                "I often gather with like-minded friends to share our enthusiasm. (/aɪ ˈɔːfn ˈɡæðər wɪð laɪkˈmaɪndɪd frendz tuː ʃɛr ˈaʊər ɪnˈθuːziæzəm/ - Tôi hay tụ tập cùng những người bạn có chung đam mê để chia sẻ nhiệt huyết.)",
+                "It depends on my mood, sometimes solo and sometimes with company. (/ɪt dɪˈpendz ɑːn maɪ muːd, ˈsʌmtaɪmz ˈsoʊloʊ ænd ˈsʌmtaɪmz wɪð ˈkʌmpəni/ - Tùy thuộc vào tâm trạng, lúc thì một mình lúc thì đi cùng bạn bè.)"
+            ]
+        }
+        if is_new(cand): return cand
+
+    # 10. MỚI: Learning Languages & Self-growth
+    elif has_any("learn", "learning", "english", "chinese", "study", "language", "fluent", "speak", "practice", "tiếng anh", "tiếng trung", "phát âm"):
+        cand = {
+            "reply": "Learning a new language is truly like gaining a second soul! What part of practicing spoken English do you find most rewarding?",
+            "reply_ipa": "/ˈlɜːrnɪŋ ə nuː ˈlæŋɡwɪdʒ ɪz ˈtruːli laɪk ˈɡeɪnɪŋ ə ˈsekənd soʊl! wʌt pɑːrt əv ˈpræktɪsɪŋ ˈspoʊkən ˈɪŋɡlɪʃ duː juː faɪnd moʊst rɪˈwɔːrdɪŋ?/",
+            "translation_vi": "Học một ngoại ngữ mới thực sự giống như có thêm một tâm hồn thứ hai! Phần nào trong việc luyện nói tiếng Anh làm bạn cảm thấy hào hứng và đắc ý nhất?",
+            "feedback": "Reflecting on your learning journey helps build higher-level expressive sentences.",
+            "suggested_replies": [
+                "Being able to express my thoughts spontaneously feels incredibly empowering. (/ˈbiːɪŋ ˈeɪbl tuː ɪkˈspres maɪ θɔːts spɑːnˈteɪniəsli fiːlz ɪnˈkredəbli ɪmˈpaʊərɪŋ/ - Có thể tự nhiên biểu đạt suy nghĩ của mình đem lại cảm giác tự tin tuyệt vời.)",
+                "I love understanding original movies and podcasts without needing subtitles. (/aɪ lʌv ˌʌndərˈstændɪŋ əˈrɪdʒənl ˈmuːviz ænd ˈpɑːdkæsts wɪˈðaʊt ˈniːdɪŋ ˈsʌbtaɪtlz/ - Tôi rất thích việc hiểu trọn vẹn phim và podcast gốc mà không cần phụ đề.)",
+                "Connecting with international friends with zero language barrier is amazing. (/kəˈnektɪŋ wɪð ˌɪntərˈnæʃnəl frendz wɪð ˈzɪroʊ ˈlæŋɡwɪdʒ ˈbæriər ɪz əˈmeɪzɪŋ/ - Kết nối với bạn bè quốc tế mà không có rào cản ngôn ngữ là điều rất tuyệt vời.)"
+            ]
+        }
+        if is_new(cand): return cand
+
+    # 11. MỚI: Greetings, Friendly Banter & Politeness (Dùng regex word boundaries chống dính chữ)
+    elif has_any("hi", "hello", "hey", "how are you", "chào", "xin chào", "good morning", "good evening"):
+        cand = {
+            "reply": "Hey there! It's so nice to chat with you today. How has your day been treating you so far?",
+            "reply_ipa": "/heɪ ðɛr! ɪts soʊ naɪs tuː tʃæt wɪð juː təˈdeɪ. haʊ hæz jʊər deɪ biːn ˈtriːtɪŋ juː soʊ fɑːr?/",
+            "translation_vi": "Chào bạn! Thật vui được trò chuyện cùng bạn hôm nay. Ngày hôm nay của bạn diễn ra thế nào rồi?",
+            "feedback": "A warm greeting is the best way to kick off an engaging English conversation.",
+            "suggested_replies": [
+                "My day has been smooth and productive, thanks for asking! (/maɪ deɪ hæz biːn smuːð ænd prəˈdʌktɪv, θæŋks fər ˈæskɪŋ/ - Ngày hôm nay của tôi rất suôn sẻ và hiệu quả, cảm ơn bạn đã hỏi!)",
+                "A bit busy, but I'm excited to practice some conversational English now. (/ə bɪt ˈbɪzi, bʌt aɪm ɪkˈsaɪtɪd tuː ˈpræktɪs səm ˌkɑːnvərˈseɪʃənl ˈɪŋɡlɪʃ naʊ/ - Hơi bận một chút, nhưng tôi rất hào hứng được luyện nói tiếng Anh lúc này.)",
+                "Pretty relaxing! I'm just taking some quiet downtime to recharge. (/ˈprɪti rɪˈlæksɪŋ! aɪm dʒʌst ˈteɪkɪŋ səm ˈkwaɪət ˈdaʊntaɪm tuː ˌriːˈtʃɑːrdʒ/ - Khá thư thả! Tôi chỉ đang dành chút thời gian yên tĩnh để nạp lại năng lượng.)"
+            ]
+        }
+        if is_new(cand): return cand
+
+    # Mặc định: Hệ thống xoay vòng chủ đề thông minh CHỐNG LẶP TUYỆT ĐỐI
+    available_turns = [turn_item for turn_item in DEFAULT_ENGLISH_TURNS if turn_item["reply"] not in past_replies]
+    if not available_turns:
+        available_turns = DEFAULT_ENGLISH_TURNS
+
+    chosen_index = (max(turn, 1) - 1) % len(available_turns)
+    return available_turns[chosen_index]
 
 # ==============================================================================
 # HỆ THỐNG KHỞI TẠO CHỦ ĐỀ ĐÀM THOẠI ĐA DẠNG (TOPIC CONVERSATION ENGINE)
 # ==============================================================================
 
-def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3.1-flash-lite") -> dict:
+def start_topic_conversation(api_key: str, topic: str, lang: str = "en", preferred_model: str = "gemini-3-flash-preview") -> dict:
     """Khởi tạo cuộc trò chuyện mở đầu sinh động về bất kỳ chủ đề đàm thoại nào được chọn."""
     t_clean = (topic or "").strip().lower()
     if not t_clean or t_clean in ["free", "casual daily talk", "随心日常闲聊", "trò chuyện tự do", "tán gẫu", "tự do"]:
@@ -613,7 +931,7 @@ STRICT JSON OUTPUT:
 
             single_turn_history = [{"role": "user", "content": prompt_text}]
             raw_res = call_gemini_api(api_key, single_turn_history, preferred_model=preferred_model)
-            parsed = json.loads(raw_res)
+            parsed = extract_json(raw_res)
             return sanitize_ai_result(parsed, lang, topic)
         except Exception as e:
             logger.warning(f"Lỗi khởi tạo chủ đề qua Gemini: {e}")
