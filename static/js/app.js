@@ -367,18 +367,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 2.1 TOGGLE SPEECH PLAYBACK RATE (1.0x ➔ 0.8x ➔ 1.2x)
+  // 2.1 TOGGLE SPEECH PLAYBACK RATE (0.8x ➔ 1.0x ➔ 1.2x)
   const toggleSpeedBtn = document.getElementById('toggle-speed');
   const selectSpeechRate = document.getElementById('select-speech-rate');
-  let currentSpeechRate = parseFloat(localStorage.getItem('speechRate')) || 1.0;
+
+  // Cập nhật tốc độ đọc mặc định sang 0.8x cho người học
+  if (!localStorage.getItem('speechRate_v2')) {
+    localStorage.setItem('speechRate', '0.8');
+    localStorage.setItem('speechRate_v2', '1');
+  }
+  let currentSpeechRate = parseFloat(localStorage.getItem('speechRate')) || 0.8;
 
   function updateSpeedUI() {
-    if (currentSpeechRate === 0.8) {
+    if (currentSpeechRate === 1.0) {
       if (toggleSpeedBtn) {
-        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">🐢</span> 0.8x';
-        toggleSpeedBtn.title = 'Tốc độ: 0.8x (Chậm, nghe rõ phát âm). Bấm để đổi.';
+        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">⚡</span> 1.0x';
+        toggleSpeedBtn.title = 'Tốc độ: 1.0x (Chuẩn bản ngữ). Bấm để đổi.';
       }
-      if (selectSpeechRate) selectSpeechRate.value = '0.8';
+      if (selectSpeechRate) selectSpeechRate.value = '1.0';
     } else if (currentSpeechRate === 1.2) {
       if (toggleSpeedBtn) {
         toggleSpeedBtn.innerHTML = '<span class="toggle-icon">🐇</span> 1.2x';
@@ -386,27 +392,27 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (selectSpeechRate) selectSpeechRate.value = '1.2';
     } else {
-      currentSpeechRate = 1.0;
+      currentSpeechRate = 0.8;
       if (toggleSpeedBtn) {
-        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">⚡</span> 1.0x';
-        toggleSpeedBtn.title = 'Tốc độ: 1.0x (Chuẩn bản ngữ). Bấm để đổi.';
+        toggleSpeedBtn.innerHTML = '<span class="toggle-icon">🐢</span> 0.8x';
+        toggleSpeedBtn.title = 'Tốc độ: 0.8x (Chậm, nghe rõ phát âm). Bấm để đổi.';
       }
-      if (selectSpeechRate) selectSpeechRate.value = '1.0';
+      if (selectSpeechRate) selectSpeechRate.value = '0.8';
     }
   }
 
   if (toggleSpeedBtn) {
     updateSpeedUI();
     toggleSpeedBtn.addEventListener('click', () => {
-      if (currentSpeechRate === 1.0) {
-        currentSpeechRate = 0.8;
-        showToast('🐢 Đã chuyển tốc độ đọc: 0.8x (Chậm, nghe rõ phát âm)');
-      } else if (currentSpeechRate === 0.8) {
+      if (currentSpeechRate === 0.8) {
+        currentSpeechRate = 1.0;
+        showToast('⚡ Đã chuyển tốc độ đọc: 1.0x (Chuẩn bản ngữ)');
+      } else if (currentSpeechRate === 1.0) {
         currentSpeechRate = 1.2;
         showToast('🐇 Đã chuyển tốc độ đọc: 1.2x (Nhanh, luyện phản xạ)');
       } else {
-        currentSpeechRate = 1.0;
-        showToast('⚡ Đã chuyển tốc độ đọc: 1.0x (Chuẩn bản ngữ)');
+        currentSpeechRate = 0.8;
+        showToast('🐢 Đã chuyển tốc độ đọc: 0.8x (Chậm, nghe rõ phát âm)');
       }
       localStorage.setItem('speechRate', currentSpeechRate);
       updateSpeedUI();
@@ -419,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (selectSpeechRate) {
     selectSpeechRate.addEventListener('change', () => {
-      currentSpeechRate = parseFloat(selectSpeechRate.value) || 1.0;
+      currentSpeechRate = parseFloat(selectSpeechRate.value) || 0.8;
       localStorage.setItem('speechRate', currentSpeechRate);
       updateSpeedUI();
     });
@@ -1555,7 +1561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const voiceZh = selectVoiceZh.value;
 
     if (selectSpeechRate) {
-      currentSpeechRate = parseFloat(selectSpeechRate.value) || 1.0;
+      currentSpeechRate = parseFloat(selectSpeechRate.value) || 0.8;
       localStorage.setItem('speechRate', currentSpeechRate);
       updateSpeedUI();
     }
