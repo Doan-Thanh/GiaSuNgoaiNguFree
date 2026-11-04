@@ -153,9 +153,10 @@ async def handle_chat(payload: dict = Body(...)):
     if not user_text:
         raise HTTPException(status_code=400, detail="Nội dung nói không được để trống.")
 
+    user_id = payload.get("userId", "")
     # Ghi nhận thống kê lượt luyện nói
     try:
-        analytics.record_chat(lang=lang, scenario_id=scenario_id)
+        analytics.record_chat(lang=lang, scenario_id=scenario_id, user_id=user_id)
     except Exception as e:
         logger.warning(f"Lỗi ghi nhận analytics chat: {e}")
 
@@ -197,9 +198,10 @@ async def start_topic(payload: dict = Body(...)):
     lang = payload.get("lang", "en")
     voice = payload.get("voice")
 
+    user_id = payload.get("userId", "")
     # Ghi nhận lượt bắt đầu luyện tập theo chủ đề
     try:
-        analytics.record_chat(lang=lang, scenario_id=topic)
+        analytics.record_chat(lang=lang, scenario_id=topic, user_id=user_id)
     except Exception as e:
         logger.warning(f"Lỗi ghi nhận analytics topic: {e}")
 
@@ -254,9 +256,10 @@ async def text_to_speech(payload: dict = Body(...)):
     if not text:
         raise HTTPException(status_code=400, detail="Thiếu văn bản cần phát âm.")
 
+    user_id = payload.get("userId", "")
     # Ghi nhận lượt nghe phát âm
     try:
-        analytics.record_listen(lang=lang, text=text)
+        analytics.record_listen(lang=lang, text=text, user_id=user_id)
     except Exception as e:
         logger.warning(f"Lỗi ghi nhận analytics tts: {e}")
 

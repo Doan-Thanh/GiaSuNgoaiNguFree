@@ -17,16 +17,22 @@ _lock = threading.Lock()
 _active_sessions = {}
 
 def _touch_active(identifier: str):
+    if not identifier:
+        return
     now = time.time()
     _active_sessions[identifier] = now
-    expired = [k for k, v in _active_sessions.items() if now - v > 600]
+    expired = [k for k, v in list(_active_sessions.items()) if now - v > 300]
     for k in expired:
         _active_sessions.pop(k, None)
 
+def _remove_active(identifier: str):
+    if identifier:
+        _active_sessions.pop(identifier, None)
+
 def get_online_users_count():
     now = time.time()
-    active = [k for k, v in _active_sessions.items() if now - v < 180]
-    return max(len(active), 1 if active else 0)
+    active = [k for k, v in list(_active_sessions.items()) if now - v < 65]
+    return len(active)
 
 
 DEFAULT_STATS = {
@@ -96,8 +102,6 @@ def record_visit(user_agent: str = ""):
     if any(b in ua_lower for b in BOT_KEYWORDS):
         return
 
-    _touch_active("srv_" + str(time.time() % 1000))
-
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -134,7 +138,21 @@ def record_visit(user_agent: str = ""):
 
 def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = "", lang: str = "en"):
     """Ghi nhận sự kiện chủ động từ JavaScript của trình duyệt (chống nuốt do cache)"""
-    _touch_active(user_id or session_id or "cli_user")
+    client_key = user_id or session_id or "cli_user"
+
+    # Người dùng đóng tab hoặc chuyển trang: giảm ngay số online tức thì
+    if event_type == "leave":
+        _remove_active(client_key)
+        return
+
+    # Duy trì trạng thái online
+    _touch_active(client_key)
+
+    # Heartbeat định kỳ chỉ dùng để duy trì đếm người online thời gian thực,
+    # tuyệt đối KHÔNG tăng total_visits và KHÔNG ghi vào recent_activities để tránh rác log
+    if event_type == "heartbeat":
+        return
+
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -195,9 +213,10 @@ def record_client_event(event_type: str = "visit", details: str = "", user_id: s
 
         _save_stats(data)
 
-def record_listen(lang: str, text: str):
+def record_listen(lang: str, text: str, user_id: str = ""):
     """Ghi nhận lượt nghe phát âm mẫu (tách riêng, KHÔNG cộng vào total_chats)"""
-    _touch_active("listen_" + str(int(time.time() * 1000) % 10000))
+    if user_id:
+        _touch_active(user_id)
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -224,9 +243,10 @@ def record_listen(lang: str, text: str):
         data["recent_activities"] = recent[:35]
         _save_stats(data)
 
-def record_chat(lang: str, scenario_id: str):
+def record_chat(lang: str, scenario_id: str, user_id: str = ""):
     """Ghi nhận lượt hội thoại (chat tự do hoặc bấm chủ đề)"""
-    _touch_active("chat_" + str(int(time.time() * 1000) % 10000))
+    if user_id:
+        _touch_active(user_id)
     with _lock:
         data = _load_stats()
         today = _get_today_str()

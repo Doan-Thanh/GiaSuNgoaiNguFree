@@ -300,9 +300,9 @@
       <div class="header-brand">
         <h1>📊 Bảng Giám Sát Người Dùng</h1>
         <p>Gia Sư Ngoại Ngữ Free • Dành riêng cho <b>ThanhBooks (Đoàn Đức Thanh)</b></p>
-        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); padding:5px 14px; border-radius:20px; font-size:0.84rem; color:#6ee7b7; font-weight:700; margin-top:8px; box-shadow:0 0 12px rgba(16,185,129,0.15);">
-          <span class="live-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span>
-          <span id="val-online-users">1</span> người đang học trực tuyến (Real-time)
+        <div id="badge-online-status" style="display:inline-flex; align-items:center; gap:8px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); padding:5px 14px; border-radius:20px; font-size:0.84rem; color:#6ee7b7; font-weight:700; margin-top:8px; box-shadow:0 0 12px rgba(16,185,129,0.15); transition:all 0.3s ease;">
+          <span class="live-dot" id="live-online-dot" style="background:#10b981; box-shadow:0 0 8px #10b981; transition:all 0.3s ease;"></span>
+          <span id="val-online-users">0</span> người đang học trực tuyến (Real-time)
         </div>
       </div>
       <div class="header-actions">
@@ -466,7 +466,31 @@
             // Real-time Online Users
       const elOnline = document.getElementById('val-online-users');
       if (elOnline) {
-        elOnline.textContent = Math.max(1, data.online_now || 1);
+        const onlineCount = (typeof data.online_now === 'number') ? data.online_now : 0;
+        elOnline.textContent = onlineCount;
+        const badgeOnline = document.getElementById('badge-online-status');
+        const liveDot = document.getElementById('live-online-dot');
+        if (onlineCount > 0) {
+          if (badgeOnline) {
+            badgeOnline.style.background = 'rgba(16, 185, 129, 0.15)';
+            badgeOnline.style.borderColor = 'rgba(16, 185, 129, 0.35)';
+            badgeOnline.style.color = '#6ee7b7';
+          }
+          if (liveDot) {
+            liveDot.style.background = '#10b981';
+            liveDot.style.boxShadow = '0 0 8px #10b981';
+          }
+        } else {
+          if (badgeOnline) {
+            badgeOnline.style.background = 'rgba(148, 163, 184, 0.1)';
+            badgeOnline.style.borderColor = 'rgba(148, 163, 184, 0.25)';
+            badgeOnline.style.color = '#94a3b8';
+          }
+          if (liveDot) {
+            liveDot.style.background = '#64748b';
+            liveDot.style.boxShadow = 'none';
+          }
+        }
       }
       const uniqueCount = data.unique_users_count || (data.visits_today > 0 ? 1 : 0);
       const elUnique = document.getElementById('val-unique-users');

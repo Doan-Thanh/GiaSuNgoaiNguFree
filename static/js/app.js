@@ -1,17 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ====== BỘ GIÁM SÁT NGƯỜI DÙNG CHỦ ĐỘNG (CLIENT ANALYTICS BEACON) ======
+  function getUserId() {
+    let uid = localStorage.getItem('thanhbooks_uid');
+    if (!uid) {
+      uid = 'u_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      localStorage.setItem('thanhbooks_uid', uid);
+    }
+    return uid;
+  }
+
+  function getSessionId() {
+    let sid = sessionStorage.getItem('thanhbooks_sid');
+    if (!sid) {
+      sid = 's_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      sessionStorage.setItem('thanhbooks_sid', sid);
+    }
+    return sid;
+  }
+
   function sendAnalyticsEvent(type, details) {
     try {
-      let userId = localStorage.getItem('thanhbooks_uid');
-      if (!userId) {
-        userId = 'u_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-        localStorage.setItem('thanhbooks_uid', userId);
-      }
-      let sessionId = sessionStorage.getItem('thanhbooks_sid');
-      if (!sessionId) {
-        sessionId = 's_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-        sessionStorage.setItem('thanhbooks_sid', sessionId);
-      }
+      const userId = getUserId();
+      const sessionId = getSessionId();
       const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       let ref = 'Trực tiếp / App';
       if (document.referrer) {
@@ -32,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
           sessionId: sessionId,
           platform: isMobile ? 'mobile' : 'desktop',
           lang: userLang,
-          details: details || `Mở ứng dụng (${isMobile ? '📱 Điện thoại' : '💻 Máy tính'} • ${langLabel}) • Nguồn: ${ref}`
+          details: details || (type === 'heartbeat' ? '' : `Mở ứng dụng (${isMobile ? '📱 Điện thoại' : '💻 Máy tính'} • ${langLabel}) • Nguồn: ${ref}`)
         }),
         keepalive: true
       }).catch(() => {});
@@ -42,16 +52,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // Kích hoạt beacon ngay khi mở ứng dụng
   sendAnalyticsEvent('visit');
 
+  // Gửi heartbeat định kỳ mỗi 25 giây để duy trì trạng thái online thời gian thực
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      sendAnalyticsEvent('heartbeat');
+    }
+  }, 25000);
+
   let lastActiveBeaconTime = Date.now();
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
+      sendAnalyticsEvent('heartbeat');
       const now = Date.now();
-      // Chỉ gửi lại sự kiện nếu người học rời đi hơn 15 phút
+      // Chỉ gửi lại sự kiện "Quay lại học" nếu người học rời đi hơn 15 phút
       if (now - lastActiveBeaconTime > 15 * 60 * 1000) {
         lastActiveBeaconTime = now;
         sendAnalyticsEvent('active', 'Quay lại học');
       }
     }
+  });
+
+  // Khi đóng tab hoặc rời khỏi trang: gửi beacon leave để giảm đếm online tức thì
+  window.addEventListener('pagehide', () => {
+    try {
+      const payload = JSON.stringify({
+        type: 'leave',
+        userId: getUserId(),
+        sessionId: getSessionId()
+      });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/app/pulse', new Blob([payload], { type: 'application/json' }));
+      }
+    } catch(e) {}
   });
 
   // STATE
@@ -615,7 +647,8 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: isFree ? 'free' : topicName,
-          lang: currentLang
+          lang: currentLang,
+          userId: getUserId()
         })
       });
       const data = await res.json();
@@ -1046,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, lang }),
+        body: JSON.stringify({ text, lang, userId: getUserId() }),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -1138,7 +1171,8 @@ document.addEventListener('DOMContentLoaded', () => {
           lang: currentLang,
           scenarioId: (!currentTopic || currentTopic === 'free') ? (currentLang === 'zh' ? '日常闲聊' : 'Casual Daily Talk') : currentTopic,
           history: chatHistory.slice(-6),
-          turnCount: turnCount
+          turnCount: turnCount,
+          userId: getUserId()
         })
       });
 
