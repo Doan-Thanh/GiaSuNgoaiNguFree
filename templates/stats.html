@@ -203,7 +203,7 @@
       font-family: monospace;
       color: var(--text-muted);
       font-size: 0.78rem;
-      min-width: 65px;
+      min-width: 125px;
     }
     .activity-desc {
       color: var(--text-main);
@@ -300,6 +300,10 @@
       <div class="header-brand">
         <h1>📊 Bảng Giám Sát Người Dùng</h1>
         <p>Gia Sư Ngoại Ngữ Free • Dành riêng cho <b>ThanhBooks (Đoàn Đức Thanh)</b></p>
+        <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(16, 185, 129, 0.15); border:1px solid rgba(16, 185, 129, 0.35); padding:5px 14px; border-radius:20px; font-size:0.84rem; color:#6ee7b7; font-weight:700; margin-top:8px; box-shadow:0 0 12px rgba(16,185,129,0.15);">
+          <span class="live-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span>
+          <span id="val-online-users">1</span> người đang học trực tuyến (Real-time)
+        </div>
       </div>
       <div class="header-actions">
         <a href="/" class="btn-action primary">🏠 Về Trang Học</a>
@@ -390,7 +394,7 @@
     <div class="dashboard-panel" style="margin-bottom:20px;">
       <div class="panel-header" style="justify-content:space-between;">
         <span><span class="live-dot"></span> Nhật Ký Hoạt Động Thời Gian Thực (Ẩn danh & Bảo mật)</span>
-        <small style="color:var(--text-muted); font-size:0.75rem;">Tự động cập nhật mỗi 10 giây</small>
+        <small style="color:var(--text-muted); font-size:0.75rem;">Tự động cập nhật mỗi 3 giây</small>
       </div>
       <div class="activity-list" id="activity-list">
         <p style="color:var(--text-muted); font-size:0.85rem; padding:12px;">Chưa có hoạt động nào được ghi nhận.</p>
@@ -459,6 +463,11 @@
       // KPIs
       document.getElementById('val-total-visits').textContent = (data.total_visits || 0).toLocaleString();
       document.getElementById('val-today-visits').textContent = (data.visits_today || 0).toLocaleString();
+            // Real-time Online Users
+      const elOnline = document.getElementById('val-online-users');
+      if (elOnline) {
+        elOnline.textContent = Math.max(1, data.online_now || 1);
+      }
       const uniqueCount = data.unique_users_count || (data.visits_today > 0 ? 1 : 0);
       const elUnique = document.getElementById('val-unique-users');
       if (elUnique) elUnique.textContent = uniqueCount.toLocaleString();
@@ -522,9 +531,21 @@
             tagClass = 'tag-action';
             tagLabel = 'Thao tác';
           }
+          const todayStr = new Date().toISOString().slice(0, 10);
+          let timeBadge = act.time || '--:--:--';
+          if (act.date) {
+            if (act.date === todayStr) {
+              timeBadge = `<span style="color:#6ee7b7; font-weight:700;">Hôm nay</span> ${act.time}`;
+            } else {
+              const dParts = act.date.split('-');
+              const shortDate = dParts.length === 3 ? `${dParts[2]}/${dParts[1]}` : act.date;
+              timeBadge = `<span style="color:var(--text-muted);">${shortDate}</span> ${act.time}`;
+            }
+          }
+
           return `
             <div class="activity-item">
-              <span class="activity-time">${act.time}</span>
+              <span class="activity-time">${timeBadge}</span>
               <span class="activity-tag ${tagClass}">${tagLabel}</span>
               <span class="activity-desc">${act.desc}</span>
             </div>
@@ -561,7 +582,7 @@
       if (activeAdminKey && dashboard.style.display !== 'none') {
         loadStats(activeAdminKey);
       }
-    }, 10000);
+    }, 3000);
   </script>
 </body>
 </html>

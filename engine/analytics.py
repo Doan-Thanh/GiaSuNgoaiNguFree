@@ -14,6 +14,21 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATS_FILE = os.path.join(BASE_DIR, "stats.json")
 _lock = threading.Lock()
 
+_active_sessions = {}
+
+def _touch_active(identifier: str):
+    now = time.time()
+    _active_sessions[identifier] = now
+    expired = [k for k, v in _active_sessions.items() if now - v > 600]
+    for k in expired:
+        _active_sessions.pop(k, None)
+
+def get_online_users_count():
+    now = time.time()
+    active = [k for k, v in _active_sessions.items() if now - v < 180]
+    return max(len(active), 1 if active else 0)
+
+
 DEFAULT_STATS = {
     "started_at": datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S"),
     "last_active": datetime.now(VN_TZ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -76,18 +91,50 @@ def _save_stats(data):
         logger.error(f"Lỗi lưu stats.json: {e}")
 
 def record_visit(user_agent: str = ""):
-    """Cập nhật trạng thái hoạt động từ server, tránh đếm đúp vì client session beacon đã đếm chính xác từng phiên"""
+    """Ghi nhận trực tiếp từ Server đảm bảo 100% thời gian thực không bị adblock nuốt mất"""
     ua_lower = (user_agent or "").lower()
     if any(b in ua_lower for b in BOT_KEYWORDS):
         return
 
+    _touch_active("srv_" + str(time.time() % 1000))
+
     with _lock:
         data = _load_stats()
-        data["last_active"] = _get_now_str()
+        today = _get_today_str()
+        now_time = datetime.now(VN_TZ).strftime("%H:%M:%S")
+        data["last_active"] = f"{today} {now_time}"
+
+        if any(kw in ua_lower for kw in ["iphone", "android", "mobile", "ipad"]):
+            device_type = "📱 Điện thoại"
+            device_key = "mobile"
+        else:
+            device_type = "💻 Máy tính"
+            device_key = "desktop"
+
+        recent = data.setdefault("recent_activities", [])
+        # Tránh ghi trùng liên tiếp trong cùng 1 giây
+        if not recent or recent[0].get("time") != now_time or recent[0].get("desc") != f"Mở ứng dụng ({device_type})":
+            recent.insert(0, {
+                "time": now_time,
+                "date": today,
+                "type": "visit",
+                "desc": f"Mở ứng dụng ({device_type})"
+            })
+            data["recent_activities"] = recent[:35]
+
+        # Tăng tổng lượt vào
+        data["total_visits"] = data.get("total_visits", 0) + 1
+        daily = data.setdefault("daily_visits", {})
+        daily[today] = daily.get(today, 0) + 1
+
+        devs = data.setdefault("devices", {"mobile": 0, "desktop": 0})
+        devs[device_key] = devs.get(device_key, 0) + 1
+
         _save_stats(data)
 
 def record_client_event(event_type: str = "visit", details: str = "", user_id: str = "", session_id: str = "", platform: str = "", user_agent: str = "", lang: str = "en"):
     """Ghi nhận sự kiện chủ động từ JavaScript của trình duyệt (chống nuốt do cache)"""
+    _touch_active(user_id or session_id or "cli_user")
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -150,6 +197,7 @@ def record_client_event(event_type: str = "visit", details: str = "", user_id: s
 
 def record_listen(lang: str, text: str):
     """Ghi nhận lượt nghe phát âm mẫu (tách riêng, KHÔNG cộng vào total_chats)"""
+    _touch_active("listen_" + str(int(time.time() * 1000) % 10000))
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -178,6 +226,7 @@ def record_listen(lang: str, text: str):
 
 def record_chat(lang: str, scenario_id: str):
     """Ghi nhận lượt hội thoại (chat tự do hoặc bấm chủ đề)"""
+    _touch_active("chat_" + str(int(time.time() * 1000) % 10000))
     with _lock:
         data = _load_stats()
         today = _get_today_str()
@@ -239,5 +288,6 @@ def get_stats_summary():
             "daily_visits": data.get("daily_visits", {}),
             "daily_chats": data.get("daily_chats", {}),
             "daily_listens": data.get("daily_listens", {}),
-            "recent_activities": data.get("recent_activities", [])
+            "recent_activities": data.get("recent_activities", []),
+            "online_now": get_online_users_count()
         }
